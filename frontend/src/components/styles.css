@@ -1,0 +1,59 @@
+/* Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: "Work Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Message Container Styling */
+.messages {
+  display: flex;
+  flex-direction: column;
+  overflow-y: scroll;
+  /* ✅ Scrollbar hide karne ke liye changes */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scroll-behavior: smooth; /* Smooth scrolling effect */
+  padding-bottom: 10px;
+}
+
+/* ✅ Chrome, Safari, Opera mein messages ka scrollbar hide karna */
+.messages::-webkit-scrollbar {
+  display: none;
+  width: 0px;
+}
+
+/* --- Global Scrollbar Styling (Invisible Scrollbar) --- */
+
+/* Scrollbar ki width 0 kar di taaki invisible rahe */
+::-webkit-scrollbar {
+  width: 0px; 
+  height: 0px;
+  background: transparent;
+}
+
+/* Scrollbar ka rasta (track) */
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+/* Scrollbar ka pakad (thumb/handle) */
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* --- Utilities --- */
+
+/* Agar kisi specific jagah scrollbar chupana ho */
+.hide-scrollbar {
+  overflow-y: scroll;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

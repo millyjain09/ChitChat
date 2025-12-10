@@ -1,0 +1,64 @@
+# -----------------------
+# Node Dependencies
+# -----------------------
+node_modules/
+**/node_modules/
+
+# -----------------------
+# Environment Files
+# -----------------------
+.env
+.env.local
+.env.*.local
+*.env
+
+# Frontend Env
+frontend/.env
+frontend/.env.local
+
+# Backend Env
+backend/.env
+backend/.env.local
+
+# -----------------------
+# Build / Output Folders
+# -----------------------
+build/
+dist/
+
+# Frontend build
+frontend/build/
+frontend/dist/  
+
+# Backend build (if any)
+backend/build/
+backend/dist/
+
+# -----------------------
+# Logs
+# -----------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------------
+# OS Files
+# -----------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------
+# IDE Files
+# -----------------------
+.vscode/
+.idea/
+
+# -----------------------
+# Misc
+# -----------------------
+*.pem
+*.crt
+*.key

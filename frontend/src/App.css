@@ -1,0 +1,42 @@
+/* Font Import - Updated to include bold weights */
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap");
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  /* Background Image settings */
+  background-image: url("./image.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* Agar image choti ho to repeat na kare, aur scroll karne par fix rahe */
+  background-attachment: fixed; 
+  
+  /* Fallback color agar image load na ho */
+  background-color: #f0f2f5; 
+}
+
+/* --- Global Scrollbar Styling --- */
+
+/* Scrollbar ki width (Pehle 0px thi, ab patli aur visible hai) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px; /* Horizontal scrollbar height */
+}
+
+/* Track (Scrollbar ka rasta) */
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05); 
+}
+
+/* Handle (Jo pakad kar ghumate hain) */
+::-webkit-scrollbar-thumb {
+  background: rgba(136, 136, 136, 0.4); 
+  border-radius: 10px; /* Rounded edges */
+  transition: background 0.3s;
+}
+
+/* Handle on hover (Mouse le jaane par Blue ho jayega) */
+::-webkit-scrollbar-thumb:hover {
+  background: #3182ce; /* Aapke app ka Blue Theme Color */
+}
