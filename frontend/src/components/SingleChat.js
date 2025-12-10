@@ -270,13 +270,11 @@ const sendMessage = async (e) => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.off("message received");
-     socket.off("typing");
-  socket.off("stop typing");
-  
-  socket.off("message delivered update");
-  socket.off("message seen update");
-
+  socket.removeAllListeners("message received");
+socket.removeAllListeners("typing");
+socket.removeAllListeners("stop typing");
+socket.removeAllListeners("message delivered update");
+socket.removeAllListeners("message seen update");
     
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
@@ -329,7 +327,7 @@ const sendMessage = async (e) => {
       socket.off("message delivered update");
       socket.off("message seen update");
     };
-  }, [socket, selectedChat]);
+  }, [socket]);
 
   // Handle Start Call
   const handleStartCall = (isVideo = false) => {
