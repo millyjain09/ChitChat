@@ -269,6 +269,14 @@ const sendMessage = async (e) => {
   // ---------------- Socket Listeners ----------------
   useEffect(() => {
     if (!socket) return;
+    
+     socket.off("typing");
+  socket.off("stop typing");
+  socket.off("message received");
+  socket.off("message delivered update");
+  socket.off("message seen update");
+
+    
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
