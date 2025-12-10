@@ -269,7 +269,7 @@ const sendMessage = async (e) => {
   // ---------------- Socket Listeners ----------------
   useEffect(() => {
     if (!socket) return;
-    
+
      socket.off("typing");
   socket.off("stop typing");
   socket.off("message received");
@@ -301,7 +301,7 @@ const sendMessage = async (e) => {
       }
     };
 
-    socket.off("message received");
+
 
     socket.on("message received", messageHandler);
     
