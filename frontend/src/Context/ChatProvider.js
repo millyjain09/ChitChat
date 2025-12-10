@@ -11,7 +11,9 @@ export const ChatState = () => {
   return useContext(ChatContext);
 };
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = process.env.REACT_APP_BACKEND_URL;
+axios.defaults.baseURL = process.env.REACT_APP_BACKEND_URL;
+
 
 const ChatProvider = ({ children }) => {
   const history = useHistory();
