@@ -293,6 +293,8 @@ const sendMessage = async (e) => {
       }
     };
 
+    socket.off("message received");
+
     socket.on("message received", messageHandler);
     
     socket.on("message delivered update", (messageId) => {
@@ -318,7 +320,7 @@ const sendMessage = async (e) => {
       socket.off("message delivered update");
       socket.off("message seen update");
     };
-  }, [socket, selectedChat, notification]);
+  }, [socket, selectedChat]);
 
   // Handle Start Call
   const handleStartCall = (isVideo = false) => {
