@@ -406,13 +406,17 @@ const styles = {
         zIndex: 10000,
     },
 
-    controls: {
-  position: 'absolute',
-  bottom: '30px',
-  left: '50%',
-  transform: 'translateX(-50%)',
+ controls: {
+  position: "fixed",
+  bottom: "20px",
+  left: "50%",
+  transform: "translateX(-50%)",
   zIndex: 10001,
-},
+  width: "100%",
+  display: "flex",
+  justifyContent: "center",
+}
+,
 
 
     callInfoOverlay: {
