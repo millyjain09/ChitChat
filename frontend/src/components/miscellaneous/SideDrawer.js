@@ -126,18 +126,18 @@ function SideDrawer() {
     <>
    <Box
   display="flex"
-  flexDirection={{ base: "row", md: "row" }}
   justifyContent="space-between"
   alignItems="center"
   bg="white"
   w="100%"
-  p="10px 20px"
+  p="10px 12px"
   boxShadow="sm"
   borderBottom="1px solid"
   borderColor="gray.200"
+  zIndex="100"
   position="sticky"
   top="0"
-  zIndex="100"
+  flexWrap="nowrap"
 >
 
   {/* LEFT: Logo + Search */}
