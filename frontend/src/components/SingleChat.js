@@ -210,7 +210,9 @@ const sendMessage = async (e) => {
             if (!data.chat || !data.chat.users) data.chat = selectedChat;
     
             if (socket) socket.emit("new message", data);
-            setMessages((prev) => [...prev, data]);
+            // setMessages((prev) => [...prev, data]);
+
+            
             setNewMessage("");
             setSelectedFile(null);
             setShowEmojiPicker(false);
@@ -327,7 +329,7 @@ socket.removeAllListeners("message seen update");
       socket.off("message delivered update");
       socket.off("message seen update");
     };
-  }, [socket]);
+  }, [socket, selectedChat,notification]);
 
   // Handle Start Call
   const handleStartCall = (isVideo = false) => {

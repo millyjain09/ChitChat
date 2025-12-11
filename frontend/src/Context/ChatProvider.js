@@ -348,17 +348,127 @@ const leaveCall = async () => {
 };
 
 const styles = {
-    overlay: { position: 'fixed', top:0, left:0, right:0, bottom:0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent:'center', alignItems:'center', zIndex: 9999 },
-    card: { background: 'white', padding: '30px', borderRadius: '20px', textAlign: 'center', minWidth: '300px' },
-    btn: { padding: '10px 20px', border: 'none', borderRadius: '30px', color: 'white', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' },
-    callContainer: { position: 'fixed', top:0, left:0, width: '100vw', height: '100vh', backgroundColor: '#222', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' },
-    videoMain: { width: '100%', height: '100%', objectFit: 'cover' },
-    videoSmall: { position: 'absolute', bottom: '100px', right: '20px', width: '150px', height: '200px', objectFit: 'cover', borderRadius: '10px', border: '2px solid white', zIndex: 10000 },
-    controls: { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 10001 },
-    // ✅ NEW STYLES
-    callInfoOverlay: { position: 'absolute', top: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 10002, textAlign: 'center', color: 'white', textShadow: '0 0 5px rgba(0,0,0,0.8)' },
-    callName: { fontSize: '28px', margin: '0 0 5px 0' },
-    callStatus: { fontSize: '16px', color: '#ccc' }
+    overlay: {
+        position: 'fixed', top:0, left:0, right:0, bottom:0,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        display: 'flex', justifyContent:'center', alignItems:'center',
+        zIndex: 9999,
+        padding: "20px",
+    },
+
+    card: {
+        background: 'white',
+        padding: '30px',
+        borderRadius: '20px',
+        textAlign: 'center',
+        minWidth: '280px',
+        maxWidth: '95vw',
+    },
+
+    btn: {
+        padding: '10px 20px',
+        border: 'none',
+        borderRadius: '30px',
+        color: 'white',
+        fontSize: '16px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+    },
+
+    callContainer: {
+        position: 'fixed',
+        top: 0, left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#222',
+        zIndex: 9999,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: "hidden"
+    },
+
+    videoMain: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+    },
+
+    videoSmall: {
+        position: 'absolute',
+        bottom: '80px',
+        right: '20px',
+        width: '140px',
+        height: '180px',
+        objectFit: 'cover',
+        borderRadius: '10px',
+        border: '2px solid white',
+        zIndex: 10000,
+    },
+
+    controls: {
+  position: 'absolute',
+  bottom: '30px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  zIndex: 10001,
+},
+
+
+    callInfoOverlay: {
+        position: 'absolute',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10002,
+        textAlign: 'center',
+        color: 'white',
+        textShadow: '0 0 5px rgba(0,0,0,0.8)'
+    },
+
+    callName: {
+        fontSize: '22px',
+        margin: '0 0 5px 0',
+    },
+
+    callStatus: {
+        fontSize: '14px',
+        color: '#ccc'
+    },
+
+    /* 📱 MOBILE RESPONSIVE FIXES */
+    '@media (max-width: 600px)': {
+        card: {
+            padding: "20px",
+            minWidth: "240px",
+            maxWidth: "90vw",
+        },
+
+        videoSmall: {
+            width: '100px',
+            height: '130px',
+            bottom: '70px',
+            right: '10px',
+        },
+
+        callName: {
+            fontSize: "18px",
+        },
+
+        callStatus: {
+            fontSize: "12px",
+        },
+
+        btn: {
+            padding: "8px 15px",
+            fontSize: "14px",
+        },
+
+        controls: {
+            bottom: "15px"
+        }
+    }
 };
+
 
 export default ChatProvider;

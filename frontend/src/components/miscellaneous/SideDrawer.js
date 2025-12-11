@@ -124,111 +124,106 @@ function SideDrawer() {
 
   return (
     <>
-      <Box
-        d="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        bg="white"
-        w="100%"
-        p="10px 20px"
-        boxShadow="sm"
-        borderBottom="1px solid"
-        borderColor="gray.200"
-        // ✅ FIX: Added zIndex to keep Header ON TOP of everything
-        zIndex="100"
-        position="sticky"
-        top="0"
+   <Box
+  display="flex"
+  flexDirection={{ base: "row", md: "row" }}
+  justifyContent="space-between"
+  alignItems="center"
+  bg="white"
+  w="100%"
+  p="10px 20px"
+  boxShadow="sm"
+  borderBottom="1px solid"
+  borderColor="gray.200"
+  position="sticky"
+  top="0"
+  zIndex="100"
+>
+
+  {/* LEFT: Logo + Search */}
+  <Box display="flex" alignItems="center" gap={3}>
+    <Image 
+      src="https://cdn.dribbble.com/userupload/24457794/file/original-706f9e480ddfdd83b7d8460b58bea7a6.jpg" 
+      h="40px" 
+      w="40px"
+    />
+
+    <Tooltip label="Search Users">
+      <Button variant="ghost" onClick={onOpen} borderRadius="lg">
+        <i className="fas fa-search" style={{ color: "#4A5568" }}></i>
+      </Button>
+    </Tooltip>
+  </Box>
+
+  {/* CENTER: Title */}
+  <Text
+    fontSize="24px"
+    fontFamily="Work sans"
+    fontWeight="bold"
+    bgGradient="linear(to-r, blue.500, purple.500)"
+    bgClip="text"
+    textAlign="center"
+  >
+    Chit-Chat
+  </Text>
+
+  {/* RIGHT: Bell + Profile in same row */}
+  <Box display="flex" alignItems="center" gap={3}>
+    
+    {/* 🔔 Notification */}
+    <Menu>
+      <MenuButton p={1} borderRadius="full" _hover={{ bg: "gray.100" }}>
+        <NotificationBadge count={notification.length} effect={Effect.SCALE} />
+        <BellIcon fontSize="2xl" color="gray.600" />
+      </MenuButton>
+
+      <MenuList>
+        {!notification.length && "No New Messages"}
+        {notification.map((notif) => (
+          <MenuItem
+            key={notif._id}
+            onClick={() => {
+              setSelectedChat(notif.chat);
+              setNotification(notification.filter((n) => n !== notif));
+            }}
+          >
+            {notif.chat.isGroupChat
+              ? `New message in ${notif.chat.chatName}`
+              : `Message from ${getSender(user, notif.chat.users)}`}
+          </MenuItem>
+        ))}
+      </MenuList>
+    </Menu>
+
+    {/* 👤 Profile Dropdown */}
+    <Menu>
+      <MenuButton 
+        as={Button} 
+        bg="white" 
+        rightIcon={<ChevronDownIcon />} 
+        borderRadius="lg"
       >
-        {/* Left Side: Logo + Search Button */}
-        <Box d="flex" alignItems="center" gap={2}>
-            <Image 
-                src="https://cdn.dribbble.com/userupload/24457794/file/original-706f9e480ddfdd83b7d8460b58bea7a6.jpg?resize=752x&vertical=center" 
-                h="40px" 
-                w="40px" 
-                mr={2} 
-                cursor="pointer"
-            />
+        <Avatar
+          size="sm"
+          name={user.name}
+          src={user.pic}
+          border="2px solid blue"
+        />
+      </MenuButton>
 
-            <Tooltip label="Search Users to chat" hasArrow placement="bottom-end">
-            <Button 
-                variant="ghost" 
-                onClick={onOpen}
-                _hover={{ bg: "gray.100" }}
-                borderRadius="lg"
-            >
-                <i className="fas fa-search" style={{ color: "#4A5568" }}></i>
-                <Text d={{ base: "none", md: "flex" }} px={4} fontWeight="500" color="gray.600">
-                Search User
-                </Text>
-            </Button>
-            </Tooltip>
-        </Box>
+      <MenuList>
+        <ProfileModal user={user}>
+          <MenuItem>My Profile</MenuItem>
+        </ProfileModal>
+        <MenuDivider />
+        <MenuItem onClick={logoutHandler}>Logout</MenuItem>
+      </MenuList>
+    </Menu>
 
-        <Text 
-            fontSize="2xl" 
-            fontFamily="Work sans" 
-            fontWeight="bold"
-            bgGradient="linear(to-r, blue.500, purple.500)"
-            bgClip="text"
-        >
-          Chit-Chat
-        </Text>
+  </Box>
 
-        <div>
-          <Menu>
-            <MenuButton p={1} borderRadius="full" _hover={{ bg: "gray.100" }}>
-              <NotificationBadge
-                count={notification.length}
-                effect={Effect.SCALE}
-              />
-              <BellIcon fontSize="2xl" m={1} color="gray.600" />
-            </MenuButton>
-            <MenuList pl={2} boxShadow="lg" borderRadius="xl">
-              {!notification.length && "No New Messages"}
-              {notification.map((notif) => (
-                <MenuItem
-                  key={notif._id}
-                  onClick={() => {
-                    setSelectedChat(notif.chat);
-                    setNotification(notification.filter((n) => n !== notif));
-                  }}
-                >
-                  {notif.chat.isGroupChat
-                    ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${getSender(user, notif.chat.users)}`}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
-          <Menu>
-            <MenuButton 
-                as={Button} 
-                bg="white" 
-                rightIcon={<ChevronDownIcon color="gray.500" />}
-                _hover={{ bg: "gray.50" }}
-                _active={{ bg: "gray.100" }}
-                borderRadius="lg"
-                px={4}
-            >
-              <Avatar
-                size="sm"
-                cursor="pointer"
-                name={user.name}
-                src={user.pic}
-                border="2px solid"
-                borderColor="blue.400"
-              />
-            </MenuButton>
-            <MenuList boxShadow="xl" borderRadius="xl" border="none" zIndex="101">
-              <ProfileModal user={user}>
-                <MenuItem _hover={{ bg: "gray.100", color: "blue.500" }} fontWeight="500">My Profile</MenuItem>
-              </ProfileModal>
-              <MenuDivider />
-              <MenuItem onClick={logoutHandler} _hover={{ bg: "red.50", color: "red.500" }} fontWeight="500">Logout</MenuItem>
-            </MenuList>
-          </Menu>
-        </div>
-      </Box>
+</Box>
+
 
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay 
