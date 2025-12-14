@@ -72,7 +72,6 @@ const ChatProvider = ({ children }) => {
       setCurrentCallDuration('0:00');
       if (interval) clearInterval(interval);
     }
-    
     return () => { if (interval) clearInterval(interval); };
   }, [callAccepted, callActive]);
 
@@ -321,7 +320,7 @@ const leaveCall = async () => {
            </div>
         </div>
       )}
-      {callActive && (
+      {callActive  && (
         <div style={styles.callContainer}>
              {/* ✅ NEW: Call Info Overlay */}
              <div style={styles.callInfoOverlay}>
