@@ -7,18 +7,49 @@ import { ChatState } from "../Context/ChatProvider";
 
 const Chatpage = () => {
   const [fetchAgain, setFetchAgain] = useState(false);
-  const { user } = ChatState();
+  const { user, selectedChat } = ChatState();
 
   return (
-    <div style={{ width: "100%" }}>
+    <Box w="100%" h="100vh">
+      {/* Top Navbar */}
       {user && <SideDrawer />}
-      <Box d="flex" justifyContent="space-between" w="100%" h="91.5vh" p="10px">
-        {user && <MyChats fetchAgain={fetchAgain} />}
+
+      {/* Main Layout */}
+      <Box
+        display="flex"
+        w="100%"
+        h="91.5vh"
+        p="10px"
+        gap="10px"
+      >
+        {/* Sidebar / MyChats */}
         {user && (
-          <Chatbox fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
+          <Box
+            display={{ base: selectedChat ? "none" : "flex", md: "flex" }}
+            w={{ base: "100%", md: "300px" }}
+            minW={{ md: "280px" }}
+            maxW={{ md: "320px" }}
+            h="100%"
+          >
+            <MyChats fetchAgain={fetchAgain} />
+          </Box>
+        )}
+
+        {/* Chat Area */}
+        {user && (
+          <Box
+            display={{ base: selectedChat ? "flex" : "none", md: "flex" }}
+            flex="1"
+            h="100%"
+          >
+            <Chatbox
+              fetchAgain={fetchAgain}
+              setFetchAgain={setFetchAgain}
+            />
+          </Box>
         )}
       </Box>
-    </div>
+    </Box>
   );
 };
 

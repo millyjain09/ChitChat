@@ -352,6 +352,7 @@ socket.removeAllListeners("message seen update");
             w="100%"
             fontFamily="Work sans"
             display="flex"
+           
             justifyContent="space-between"
             alignItems="center"
             bg="white"
@@ -431,6 +432,7 @@ socket.removeAllListeners("message seen update");
             backgroundBlendMode="multiply"
             w="100%"
             h="100%"
+           
             overflowY="hidden"
             position="relative"
           >
@@ -455,6 +457,7 @@ socket.removeAllListeners("message seen update");
                 mb={2} 
                 bg="white" 
                 borderRadius="full" 
+                
                 width="fit-content" 
                 px={2} 
                 py={1}
@@ -592,6 +595,7 @@ socket.removeAllListeners("message seen update");
             display="flex" 
             alignItems="center" 
             justifyContent="center" 
+           
             h="100%" 
             bg="white" 
             flexDir="column"
