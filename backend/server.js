@@ -8,8 +8,16 @@ const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const path = require("path");
+const fs = require('fs');
+
 
 dotenv.config(); // IMPORTANT for Render
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    console.log('Creating uploads directory...');
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 connectDB();
 
