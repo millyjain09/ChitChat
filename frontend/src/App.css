@@ -1,42 +1,41 @@
-/* Font Import - Updated to include bold weights */
 @import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap");
 
 .App {
-  min-height: 100vh;
-  display: flex;
-  /* Background Image settings */
-  background-image: url("./image.png");
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-  /* Agar image choti ho to repeat na kare, aur scroll karne par fix rahe */
-  background-attachment: fixed; 
+  /* 🔥 Height 100vh aur Width 100% - No Gaps */
+  height: 100vh;
+  width: 100vw;
   
-  /* Fallback color agar image load na ho */
-  background-color: #f0f2f5; 
+  /* Background fix */
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  
+  /* Flexbox hataya taaki Chatpage expand ho sake */
+  display: block; 
+  position: absolute; /* Fix positioning */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
-/* --- Global Scrollbar Styling --- */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-/* Scrollbar ki width (Pehle 0px thi, ab patli aur visible hai) */
+/* Custom Scrollbar for inner content only */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px; /* Horizontal scrollbar height */
+  width: 6px;
 }
-
-/* Track (Scrollbar ka rasta) */
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05); 
+  background: transparent; 
 }
-
-/* Handle (Jo pakad kar ghumate hain) */
 ::-webkit-scrollbar-thumb {
-  background: rgba(136, 136, 136, 0.4); 
-  border-radius: 10px; /* Rounded edges */
-  transition: background 0.3s;
+  background: rgba(255, 255, 255, 0.3); 
+  border-radius: 10px;
 }
-
-/* Handle on hover (Mouse le jaane par Blue ho jayega) */
 ::-webkit-scrollbar-thumb:hover {
-  background: #3182ce; /* Aapke app ka Blue Theme Color */
+  background: rgba(255, 255, 255, 0.5); 
 }

@@ -1,19 +1,13 @@
 import { FormControl } from "@chakra-ui/form-control";
 import { Input } from "@chakra-ui/input";
-import { Box, Text, HStack } from "@chakra-ui/layout";
+import { Box, Text, HStack, VStack } from "@chakra-ui/layout";
 import "./styles.css";
-import {
-  IconButton,
-  Spinner,
-  useToast,
-  Tooltip,
-  Badge,
-} from "@chakra-ui/react";
+import { IconButton, Spinner, useToast, Tooltip, Badge, useColorModeValue, Image } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { ArrowBackIcon, AttachmentIcon, CloseIcon } from "@chakra-ui/icons";
-import { FaPhoneAlt, FaVideo, FaSmile, FaPaperPlane, FaTimes } from "react-icons/fa"; // ✅ FaTimes added
+import { FaPhoneAlt, FaVideo, FaSmile, FaPaperPlane, FaTimes, FaComments } from "react-icons/fa";
 import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
@@ -22,17 +16,12 @@ import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 import Picker from "emoji-picker-react";
 
+// Sounds
+const notificationSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"); 
+const sendSound = new Audio("https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3"); 
+
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
-  const {
-    selectedChat,
-    setSelectedChat,
-    user,
-    notification,
-    setNotification,
-    socket,
-    startCall,
-    onlineUsers 
-  } = ChatState();
+  const { selectedChat, setSelectedChat, user, notification, setNotification, socket, startCall, onlineUsers } = ChatState();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -41,13 +30,21 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [istyping, setIsTyping] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  
-  // ✅ NEW: Reply State
   const [replyMessage, setReplyMessage] = useState(null);
-  
+  const [latestChatDetails, setLatestChatDetails] = useState(null);
+  const [sendLoading, setSendLoading] = useState(false);
+
   const fileInputRef = useRef(null);
   const toast = useToast();
   const lastTypingTimeRef = useRef(null);
+
+  // Theme Colors
+  const textColor = useColorModeValue("gray.800", "white");
+  const subTextColor = useColorModeValue("gray.500", "gray.400");
+  const inputBg = useColorModeValue("white", "gray.700");
+  const headerBorder = useColorModeValue("rgba(0,0,0,0.05)", "rgba(255,255,255,0.05)");
+  const typingBubbleBg = useColorModeValue("white", "gray.700");
+  const glassBg = useColorModeValue("rgba(255, 255, 255, 0.4)", "rgba(0, 0, 0, 0.5)");
 
   const defaultOptions = {
     loop: true,
@@ -56,14 +53,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     rendererSettings: { preserveAspectRatio: "xMidYMid slice" },
   };
 
-  // Helper to Check Online Status
   const checkOnlineStatus = () => {
      if(!selectedChat || selectedChat.isGroupChat) return false;
      const otherUser = selectedChat.users.find(u => u._id !== user._id);
      return otherUser && onlineUsers.includes(otherUser._id);
   };
 
-  // ---------------- Fetch Messages ----------------
   const fetchMessages = async () => {
     if (!selectedChat) return;
     try {
@@ -73,265 +68,129 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setMessages(data);
       setLoading(false);
       if (socket) socket.emit("join chat", selectedChat._id);
+      setLatestChatDetails(selectedChat);
     } catch (error) {
       setLoading(false);
-      toast({
-        title: "Error Occurred!",
-        description: "Failed to Load the Messages",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+      toast({ title: "Error Occurred!", description: "Failed to Load the Messages", status: "error", duration: 5000, isClosable: true, position: "bottom" });
     }
   };
 
-  // Reset reply message when chat changes
   useEffect(() => {
     fetchMessages();
     setReplyMessage(null); 
-    // eslint-disable-next-line
+    setLatestChatDetails(selectedChat);
   }, [selectedChat]);
 
-  // ---------------- Send Message ----------------
-  // const sendMessage = async (e) => {
-  //   if ((e.key === "Enter" || e.type === "click") && (newMessage.trim() || selectedFile)) {
-  //     if(e.key === "Enter") e.preventDefault();
-  //     if (!selectedChat || !selectedChat._id) return;
-
-  //     try {
-  //       let res;
-  //       const config = { headers: { Authorization: `Bearer ${user.token}` } };
-
-  //       // ✅ Case 1: File Upload (with potential Reply)
-  //       if (selectedFile) {
-  //         const formData = new FormData();
-  //         formData.append("chatId", selectedChat._id);
-  //         if (newMessage.trim()) formData.append("content", newMessage.trim());
-  //         formData.append("file", selectedFile);
-  //         if (replyMessage) formData.append("replyTo", replyMessage._id); // Send Reply ID
-
-  //         res = await axios.post("/api/message", formData, config);
-  //       } 
-  //       // ✅ Case 2: Text Message (with potential Reply)
-  //       else {
-  //         const payload = { 
-  //             chatId: selectedChat._id, 
-  //             content: newMessage.trim(),
-  //             replyTo: replyMessage ? replyMessage._id : null // Send Reply ID
-  //         };
-  //         res = await axios.post("/api/message", payload, config);
-  //       }
-  
-  //       const data = res.data;
-  //       if (!data.chat || !data.chat.users) data.chat = selectedChat;
-  
-  //       if (socket) socket.emit("new message", data);
-  //       setMessages((prev) => [...prev, data]);
-  //       setNewMessage("");
-  //       setSelectedFile(null);
-  //       setShowEmojiPicker(false);
-  //       setReplyMessage(null); // ✅ Clear reply after sending
-        
-  //       if (socket && typing) {
-  //           socket.emit("stop typing", selectedChat._id);
-  //           setTyping(false);
-  //       }
-
-  //     } catch (error) {
-  //       toast({
-  //         title: "Error Occurred!",
-  //         description: "Failed to send the message",
-  //         status: "error",
-  //         duration: 5000,
-  //         isClosable: true,
-  //         position: "bottom",
-  //       });
-  //     }
-  //   }
-  // };
-
-
-  // ---------------- Send Message (UPDATED) ----------------
-const sendMessage = async (e) => {
+  const sendMessage = async (e) => {
     if ((e.key === "Enter" || e.type === "click") && (newMessage.trim() || selectedFile)) {
         if(e.key === "Enter") e.preventDefault();
         if (!selectedChat || !selectedChat._id) return;
 
         try {
-            let res;
-            // COMMON CONFIG (For both cases)
-            let config = { 
-                headers: { 
-                    Authorization: `Bearer ${user.token}`,
-                } 
-            };
+            setSendLoading(true);
+            sendSound.play().catch(e => console.log(e)); 
             
-            // ✅ Case 1: File Upload (with potential Reply) - CRITICAL CHANGE HERE
+            let res;
+            const config = { headers: { Authorization: `Bearer ${user.token}` } };
+
             if (selectedFile) {
+                // 🔥 FormData Logic for File Upload
                 const formData = new FormData();
                 formData.append("chatId", selectedChat._id);
+                
                 if (newMessage.trim()) formData.append("content", newMessage.trim());
-                // Multer expects the file field name to be 'file' as per your backend (L-133)
                 formData.append("file", selectedFile); 
+                
                 if (replyMessage) formData.append("replyTo", replyMessage._id); 
 
-                // --- CRITICAL FIX --- 
-                // Set Content-Type to undefined so browser/axios can set it correctly for FormData
-                config.headers['Content-Type'] = 'multipart/form-data'; // Use this line for better compatibility
-                // OR use: config.headers['Content-Type'] = undefined; 
-                // I'll stick to 'multipart/form-data' explicitly here for clarity
-                // But we must also ensure the 'boundary' is added. Setting it manually to undefined lets axios handle the boundary.
-
-                config = { 
-                    headers: { 
-                        Authorization: `Bearer ${user.token}`,
-                        // 📢 FIX: Set Content-Type to undefined for FormData boundary to be auto-set
-                        "Content-Type": undefined 
-                    } 
-                };
-
+                // Axios automatically sets Content-Type to multipart/form-data
                 res = await axios.post("/api/message", formData, config);
-            } 
-            // ✅ Case 2: Text Message (with potential Reply)
-            else {
-                // For JSON data, Content-Type defaults to application/json, which is correct
-                const payload = { 
-                    chatId: selectedChat._id, 
-                    content: newMessage.trim(),
-                    replyTo: replyMessage ? replyMessage._id : null
-                };
-                // Use default config for JSON
-                config.headers['Content-Type'] = 'application/json'; // Explicitly set for text message
+            } else {
+                // Normal Text Message
+                const payload = { chatId: selectedChat._id, content: newMessage.trim(), replyTo: replyMessage ? replyMessage._id : null };
+                config.headers['Content-Type'] = 'application/json'; 
                 res = await axios.post("/api/message", payload, config);
             }
     
             const data = res.data;
             if (!data.chat || !data.chat.users) data.chat = selectedChat;
-    
+            
+            // ✅ Optimistic UI Update (Turant dikhana)
+            setMessages([...messages, data]); 
+            
             if (socket) socket.emit("new message", data);
-            // setMessages((prev) => [...prev, data]);
-
             
             setNewMessage("");
             setSelectedFile(null);
             setShowEmojiPicker(false);
             setReplyMessage(null);
+            setSendLoading(false);
             
-            if (socket && typing) {
-                socket.emit("stop typing", selectedChat._id);
-                setTyping(false);
-            }
+            if (socket) { socket.emit("stop typing", selectedChat._id); setTyping(false); }
 
         } catch (error) {
-            console.error("Sending message failed:", error.response || error);
-            toast({
-                title: "Error Occurred!",
-                description: "Failed to send the message",
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "bottom",
-            });
+            setSendLoading(false);
+            console.error("Send Error:", error);
+            toast({ title: "Failed to send message", description: "File upload failed or too large.", status: "error", duration: 5000, isClosable: true, position: "bottom" });
         }
     }
-};
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setSelectedFile(e.target.files[0]);
-    }
   };
 
-  const onEmojiClick = (emojiObject) => {
-    setNewMessage((prev) => prev + (emojiObject?.emoji || ""));
+  const sendHello = () => { setNewMessage("👋 Hello!"); };
+
+  const handleFileSelect = (e) => { 
+      if (e.target.files && e.target.files.length > 0) {
+          setSelectedFile(e.target.files[0]);
+      }
   };
+  
+  const onEmojiClick = (emojiObject) => { setNewMessage((prev) => prev + (emojiObject?.emoji || "")); };
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
     if (!socket || !selectedChat) return;
-
-    if (!typing) {
-      setTyping(true);
-      socket.emit("typing", selectedChat._id);
-    }
-
+    if (!typing) { setTyping(true); socket.emit("typing", selectedChat._id); }
     lastTypingTimeRef.current = new Date().getTime();
     const timerLength = 3000;
     setTimeout(() => {
       const timeNow = new Date().getTime();
       const timeDiff = timeNow - (lastTypingTimeRef.current || 0);
-      if (timeDiff >= timerLength && typing) {
-        socket.emit("stop typing", selectedChat._id);
-        setTyping(false);
-      }
+      if (timeDiff >= timerLength && typing) { socket.emit("stop typing", selectedChat._id); setTyping(false); }
     }, timerLength);
   };
 
-  // ---------------- Socket Listeners ----------------
   useEffect(() => {
     if (!socket) return;
-
-  socket.removeAllListeners("message received");
-socket.removeAllListeners("typing");
-socket.removeAllListeners("stop typing");
-socket.removeAllListeners("message delivered update");
-socket.removeAllListeners("message seen update");
+    const handleTyping = () => setIsTyping(true);
+    const handleStopTyping = () => setIsTyping(false);
     
-    socket.on("typing", () => setIsTyping(true));
-    socket.on("stop typing", () => setIsTyping(false));
-
-    const messageHandler = (newMessageRecieved) => {
+    const handleMessageReceived = (newMessageRecieved) => {
       if (!newMessageRecieved || !newMessageRecieved.chat) return;
-
+      
       if (!selectedChat || selectedChat._id !== newMessageRecieved.chat._id) {
         if (!notification.find((n) => n._id === newMessageRecieved._id)) {
-          setNotification([newMessageRecieved, ...notification]);
-          setFetchAgain(!fetchAgain);
+            notificationSound.play().catch(e => console.log(e));
+            setNotification([newMessageRecieved, ...notification]);
+            setFetchAgain(!fetchAgain);
         }
       } else {
+        // 🔥 Double Message Fix: Khud ka message socket se mat lo
+        if (newMessageRecieved.sender._id === user._id) return; 
         setMessages((prev) => [...prev, newMessageRecieved]);
-        socket.emit("message delivered", {
-          messageId: newMessageRecieved._id,
-          chat: newMessageRecieved.chat,
-        });
-        socket.emit("message seen", {
-          messageId: newMessageRecieved._id,
-          chat: newMessageRecieved.chat,
-        });
       }
     };
 
-
-
-    socket.on("message received", messageHandler);
-    
-    socket.on("message delivered update", (messageId) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === messageId ? { ...msg, status: "delivered" } : msg
-        )
-      );
-    });
-
-    socket.on("message seen update", (messageId) => {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg._id === messageId ? { ...msg, status: "seen" } : msg
-        )
-      );
-    });
+    socket.on("typing", handleTyping);
+    socket.on("stop typing", handleStopTyping);
+    socket.on("message received", handleMessageReceived);
 
     return () => {
-      socket.off("typing");
-      socket.off("stop typing");
-      socket.off("message received", messageHandler);
-      socket.off("message delivered update");
-      socket.off("message seen update");
+      socket.off("typing", handleTyping);
+      socket.off("stop typing", handleStopTyping);
+      socket.off("message received", handleMessageReceived);
     };
-  }, [socket, selectedChat,notification]);
+  }, [socket, selectedChat, notification, fetchAgain, user]);
 
-  // Handle Start Call
   const handleStartCall = (isVideo = false) => {
     if (!selectedChat) return;
     const receiver = selectedChat.users.find((u) => u._id !== user._id);
@@ -339,284 +198,108 @@ socket.removeAllListeners("message seen update");
     startCall(receiver._id, isVideo);
   };
 
-  // ---------------- Render ----------------
+  const currentChatData = latestChatDetails || selectedChat;
+
   return (
     <>
       {selectedChat ? (
         <>
-          {/* Header */}
-          <Box
-            fontSize={{ base: "20px", md: "24px" }}
-            py={3}
-            px={4}
-            w="100%"
-            fontFamily="Work sans"
-            display="flex"
-           
-            justifyContent="space-between"
-            alignItems="center"
-            bg="white"
-            borderBottom="1px solid"
-            borderColor="gray.200"
-            boxShadow="sm"
-            zIndex={10}
-          >
-            <Box display="flex" alignItems="center" gap="12px">
-              <IconButton
-                display={{ base: "flex", md: "none" }}
-                icon={<ArrowBackIcon />}
-                onClick={() => setSelectedChat("")}
-                variant="ghost"
-                borderRadius="full"
-              />
-              
+          {/* HEADER */}
+          <Box fontSize={{ base: "18px", md: "24px" }} pb={3} px={2} w="100%" fontFamily="Work sans" display="flex" justifyContent="space-between" alignItems="center" borderBottom="1px solid" borderColor={headerBorder}>
+            <IconButton display={{ base: "flex", md: "none" }} icon={<ArrowBackIcon />} onClick={() => setSelectedChat("")} mr={2} bg="transparent" />
+            <Box display="flex" alignItems="center" flex={1} overflow="hidden">
               {!selectedChat.isGroupChat ? (
                 <>
-                 <Box>
-                    <Text fontWeight="bold" color="gray.700">
-                        {getSender(user, selectedChat.users)}
+                  <Box flex={1}>
+                    <Text fontWeight="bold" color={textColor} isTruncated>
+                        {currentChatData.users ? getSender(user, currentChatData.users) : "User"}
                     </Text>
-                    <Text fontSize="xs" color={checkOnlineStatus() ? "green.500" : "gray.400"} fontWeight="bold">
+                    <Text fontSize="12px" color={checkOnlineStatus() ? "green.400" : "gray.500"} fontWeight="bold">
                         {checkOnlineStatus() ? "● Online" : "Offline"}
                     </Text>
-                 </Box>
-                  <ProfileModal user={getSenderFull(user, selectedChat.users)} />
+                  </Box>
+                  <ProfileModal user={currentChatData.users ? getSenderFull(user, currentChatData.users) : {}} />
                 </>
               ) : (
                 <>
-                  <Text fontWeight="bold" color="gray.700">
-                    {selectedChat.chatName.toUpperCase()}
-                  </Text>
-                  <UpdateGroupChatModal
-                    fetchMessages={fetchMessages}
-                    fetchAgain={fetchAgain}
-                    setFetchAgain={setFetchAgain}
-                  />
+                  <Text fontWeight="bold" color={textColor} flex={1} isTruncated>{selectedChat.chatName.toUpperCase()}</Text>
+                  <UpdateGroupChatModal fetchMessages={fetchMessages} fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
                 </>
               )}
             </Box>
-
-            {/* Call buttons */}
             {!selectedChat.isGroupChat && (
-                <HStack spacing={2}>
-                  <IconButton
-                    icon={<FaPhoneAlt />}
-                    colorScheme="green"
-                    variant="ghost"
-                    isRound
-                    size="md"
-                    onClick={() => handleStartCall(false)} 
-                    _hover={{ bg: "green.100", color: "green.600" }}
-                  />
-                  <IconButton
-                    icon={<FaVideo />}
-                    colorScheme="blue"
-                    variant="ghost"
-                    isRound
-                    size="md"
-                    onClick={() => handleStartCall(true)} 
-                    _hover={{ bg: "blue.100", color: "blue.600" }}
-                  />
+                <HStack spacing={1} ml={2}>
+                  <IconButton icon={<FaPhoneAlt />} colorScheme="green" variant="ghost" size="sm" borderRadius="full" onClick={() => handleStartCall(false)} />
+                  <IconButton icon={<FaVideo />} colorScheme="blue" variant="ghost" size="sm" borderRadius="full" onClick={() => handleStartCall(true)} />
                 </HStack>
             )}
           </Box>
 
-          {/* Chat Body */}
-          <Box
-            display="flex"
-            flexDir="column"
-            justifyContent="flex-end"
-            p={3}
-            bg="#f0f2f5" 
-            backgroundImage="url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')"
-            backgroundBlendMode="multiply"
-            w="100%"
-            h="100%"
-           
-            overflowY="hidden"
-            position="relative"
-          >
+          {/* CHAT BODY */}
+          <Box display="flex" flexDir="column" justifyContent="flex-end" p={3} w="100%" h="100%" borderRadius="lg" overflowY="hidden">
             {loading ? (
-              <Spinner size="xl" w={20} h={20} alignSelf="center" margin="auto" color="blue.500" />
+              <Spinner size="xl" w={20} h={20} alignSelf="center" margin="auto" color="pink.500" />
             ) : (
-              <div className="messages" style={{ scrollBehavior: "smooth" }}>
-                {/* ✅ Passed setReplyMessage and setMessages */}
-                <ScrollableChat
-                  messages={messages}
-                  setMessages={setMessages} 
-                  socket={socket}
-                  selectedChat={selectedChat}
-                  setReplyMessage={setReplyMessage} 
-                />
+              <div className="messages" style={{ scrollBehavior: "smooth", display: 'flex', flexDirection: 'column', height: '100%' }}>
+                {messages && messages.length > 0 ? (
+                    <ScrollableChat messages={messages} setMessages={setMessages} socket={socket} selectedChat={selectedChat} setReplyMessage={setReplyMessage} />
+                ) : (
+                    <VStack flex={1} justifyContent="center" alignItems="center" spacing={4} opacity={0.8}>
+                        <Image src="https://cdn-icons-png.flaticon.com/512/9374/9374940.png" h="120px" w="120px" filter="drop-shadow(0px 4px 6px rgba(0,0,0,0.1))" className="msg-animate" />
+                        <Box textAlign="center">
+                            <Text fontSize="xl" fontWeight="bold" color={textColor}>No messages here yet...</Text>
+                            <Text fontSize="sm" color="gray.500">Send a message or wave hello! 👋</Text>
+                        </Box>
+                        <Badge cursor="pointer" colorScheme="purple" p={2} borderRadius="full" onClick={sendHello} _hover={{ transform: "scale(1.05)" }}>Click to say Hi!</Badge>
+                    </VStack>
+                )}
               </div>
             )}
-
+            
             {istyping && (
-              <Box 
-                display="flex" 
-                mb={2} 
-                bg="white" 
-                borderRadius="full" 
-                
-                width="fit-content" 
-                px={2} 
-                py={1}
-                boxShadow="sm"
-              >
-                <Lottie options={defaultOptions} height={30} width={50} />
+              <Box alignSelf="flex-start" ml={2} mb={2} bg={typingBubbleBg} px={3} py={2} borderRadius="xl" borderBottomLeftRadius="none" boxShadow="sm" display="flex" alignItems="center" gap={2}>
+                <Lottie options={defaultOptions} height={20} width={40} />
+                <Text fontSize="xs" color="gray.500" fontStyle="italic" fontWeight="bold">Typing...</Text>
               </Box>
             )}
-
-            {/* Input Footer */}
-            <FormControl isRequired mt={2}>
-              
-               {/* ✅ REPLY PREVIEW BANNER */}
+            
+            <FormControl isRequired mt={3}>
                {replyMessage && (
-                  <Box 
-                    bg="gray.100" 
-                    p={2} 
-                    borderLeft="4px solid purple" 
-                    mb={2} 
-                    borderRadius="md" 
-                    display="flex" 
-                    justifyContent="space-between" 
-                    alignItems="center"
-                  >
-                      <Box>
-                          <Text fontSize="xs" fontWeight="bold" color="purple.600">
-                              Replying to {replyMessage.sender.name}
-                          </Text>
-                          <Text fontSize="sm" noOfLines={1}>
-                              {replyMessage.content || "Attachment"}
-                          </Text>
-                      </Box>
-                      <IconButton 
-                        size="xs" 
-                        icon={<FaTimes/>} 
-                        onClick={() => setReplyMessage(null)} 
-                        variant="ghost"
-                      />
+                  <Box bg={inputBg} p={2} mb={2} borderRadius="lg" display="flex" justifyContent="space-between" boxShadow="md">
+                      <Text fontSize="sm" noOfLines={1} color="gray.500">Replying to: {replyMessage.content || "Media"}</Text>
+                      <IconButton size="xs" icon={<FaTimes/>} onClick={() => setReplyMessage(null)} />
                   </Box>
               )}
-
                {selectedFile && (
-                <Badge 
-                    mb={2} 
-                    borderRadius="full" 
-                    px={3} 
-                    py={1} 
-                    colorScheme="purple" 
-                    display="flex" 
-                    alignItems="center" 
-                    width="fit-content"
-                    boxShadow="md"
-                >
-                  <AttachmentIcon mr={2} /> {selectedFile.name}
-                  <CloseIcon ml={2} cursor="pointer" onClick={() => setSelectedFile(null)} w={2} h={2} />
+                <Badge mb={2} colorScheme="purple" p={2} borderRadius="md" display="flex" alignItems="center" gap={2}>
+                  <AttachmentIcon /> <Text isTruncated maxW="200px">{selectedFile.name}</Text> <CloseIcon cursor="pointer" onClick={() => setSelectedFile(null)}/>
                 </Badge>
               )}
+              {showEmojiPicker && <Box position="absolute" bottom="70px" left="20px" zIndex={10}><Picker onEmojiClick={onEmojiClick} /></Box>}
 
-              {showEmojiPicker && (
-                <Box position="absolute" bottom="70px" left="20px" zIndex={100} boxShadow="xl">
-                  <Picker onEmojiClick={onEmojiClick} />
-                </Box>
-              )}
-
-              <HStack 
-                bg="white" 
-                p={2} 
-                borderRadius="full" 
-                boxShadow="md" 
-                border="1px solid" 
-                borderColor="gray.200"
-                alignItems="center"
-              >
-                <Tooltip label="Attach File">
-                  <IconButton 
-                    icon={<AttachmentIcon />} 
-                    onClick={() => fileInputRef.current.click()} 
-                    variant="ghost"
-                    isRound
-                    color="gray.500"
-                    _hover={{ bg: "gray.100", color: "blue.500" }}
-                  />
-                </Tooltip>
-                <input
-                  type="file"
-                  style={{ display: "none" }}
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                />
-
-                <Tooltip label="Emoji">
-                  <IconButton 
-                    icon={<FaSmile />} 
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)} 
-                    variant="ghost"
-                    isRound
-                    color="gray.500"
-                    _hover={{ bg: "gray.100", color: "orange.400" }}
-                  />
-                </Tooltip>
-
-                <Input
-                  variant="unstyled"
-                  placeholder="Type a message..."
-                  value={newMessage}
-                  onChange={typingHandler}
-                  onKeyDown={sendMessage} 
-                  bg="transparent"
-                  px={2}
-                  fontSize="md"
-                  h="100%"
-                />
-
-                <Tooltip label="Send">
-                  <IconButton
-                    bgGradient="linear(to-r, blue.400, blue.600)"
-                    color="white"
-                    icon={<FaPaperPlane />}
-                    onClick={sendMessage} 
-                    isRound
-                    boxShadow="md"
-                    _hover={{
-                        bgGradient: "linear(to-r, blue.500, blue.700)",
-                        transform: "scale(1.05)"
-                    }}
-                    size="md"
-                  />
-                </Tooltip>
+              <HStack bg={inputBg} p={1} borderRadius="full" boxShadow="lg">
+                <IconButton icon={<FaSmile />} onClick={() => setShowEmojiPicker(!showEmojiPicker)} variant="ghost" color="gray.500" borderRadius="full"/>
+                <IconButton icon={<AttachmentIcon />} onClick={() => fileInputRef.current.click()} variant="ghost" color="gray.500" borderRadius="full"/>
+                <input type="file" style={{ display: "none" }} ref={fileInputRef} onChange={handleFileSelect}/>
+                
+                <Input variant="unstyled" placeholder="Type a message..." value={newMessage} onChange={typingHandler} onKeyDown={sendMessage} px={2} color={textColor}/>
+                <IconButton colorScheme="pink" icon={sendLoading ? <Spinner size="xs"/> : <FaPaperPlane />} onClick={sendMessage} borderRadius="full" boxShadow="md" bgGradient="linear(to-r, #f093fb, #f5576c)" _hover={{ transform: "scale(1.05)" }} isLoading={sendLoading}/>
               </HStack>
             </FormControl>
           </Box>
         </>
       ) : (
-        <Box 
-            display="flex" 
-            alignItems="center" 
-            justifyContent="center" 
-           
-            h="100%" 
-            bg="white" 
-            flexDir="column"
-            textAlign="center"
-            bgImage="url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')"
-            backgroundBlendMode="overlay"
-        >
-          <Box 
-            bg="rgba(255,255,255,0.9)" 
-            p={8} 
-            borderRadius="2xl" 
-            boxShadow="lg"
-          >
-            <Text fontSize="4xl" mb={4}>👋</Text>
-            <Text fontSize="2xl" fontFamily="Work sans" fontWeight="bold" color="gray.700">
-              Welcome to Chit-Chat
-            </Text>
-            <Text color="gray.500" mt={2}>
-                Select a chat from the left menu to start messaging.
-            </Text>
+        // 🔥 Clean Welcome Screen
+        <Box display="flex" alignItems="center" justifyContent="center" h="100%" flexDirection="column" p={5}>
+          <Box bg={glassBg} backdropFilter="blur(20px)" p={12} borderRadius="3xl" boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.15)" textAlign="center" border="1px solid rgba(255,255,255,0.2)" maxW="500px" className="msg-animate">
+            <Box bgGradient="linear(to-br, #f093fb, #f5576c)" p={6} borderRadius="full" boxShadow="xl" display="inline-block" mb={6} css={{ animation: "float 6s ease-in-out infinite" }}>
+                <FaComments size="80px" color="white" />
+            </Box>
+            <Text fontSize="5xl" fontWeight="900" bgGradient="linear(to-r, #f093fb, #f5576c)" bgClip="text" mb={2}>Hi, {user.name}! 👋</Text>
+            <Text fontSize="2xl" color={textColor} fontWeight="bold" opacity={0.9} mb={4}>Welcome to Chit-Chat</Text>
+            <Text fontSize="lg" color={subTextColor} fontWeight="medium">Select a chat to start messaging.</Text>
           </Box>
+          <style>{`@keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }`}</style>
         </Box>
       )}
     </>

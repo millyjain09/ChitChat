@@ -1,43 +1,32 @@
-import {
-  Box,
-  Text,
-  Image,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Tooltip,
-  Input,
-  Button,
-  HStack,
-  useToast
-} from "@chakra-ui/react";
-import {
-  FaFilePdf, FaFileAlt, FaFileImage, FaFileVideo,
-  FaArrowLeft, FaPlay, FaEllipsisV, FaTrash, FaEdit, FaReply, FaChevronDown, FaCheck
-} from "react-icons/fa";
+import { Box, Text, Image, IconButton, Menu, MenuButton, MenuList, MenuItem, Tooltip, Input, Button, HStack, useToast, useColorModeValue, Badge } from "@chakra-ui/react";
+import { FaFilePdf, FaFileAlt, FaFileImage, FaFileVideo, FaArrowLeft, FaPlay, FaChevronDown, FaTrash, FaEdit, FaReply, FaCheck, FaCopy } from "react-icons/fa";
 import { BsCheck, BsCheckAll } from "react-icons/bs";
 import ScrollableFeed from "react-scrollable-feed";
 import { ChatState } from "../Context/ChatProvider";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import axios from "axios";
+import "./styles.css";
 
-// ✅ Receives setReplyMessage from Parent
 function ScrollableChat({ messages, setMessages, socket, setReplyMessage }) { 
   const { user } = ChatState();
   const toast = useToast();
   
-  // Preview & Edit States
+  // States
   const [previewSrc, setPreviewSrc] = useState(null);
   const [previewType, setPreviewType] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState("");
-
-  const videoRef = useRef(null);
   const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
-  // --- Helper: File Icons ---
+  // Colors
+  const myMsgBg = "linear-gradient(to right, #f093fb, #f5576c)";
+  const otherMsgBg = useColorModeValue("white", "gray.700");
+  const myMsgColor = "white";
+  const otherMsgColor = useColorModeValue("gray.800", "white");
+  const timeColorMy = "rgba(255,255,255,0.8)";
+  const timeColorOther = useColorModeValue("gray.500", "gray.400");
+  const dateBadgeBg = useColorModeValue("rgba(0,0,0,0.08)", "rgba(255,255,255,0.15)");
+
   const getFileIcon = (fileType) => {
     if (!fileType) return <FaFileAlt size={22} />;
     if (fileType.startsWith("image/")) return <FaFileImage size={22} />;
@@ -46,230 +35,201 @@ function ScrollableChat({ messages, setMessages, socket, setReplyMessage }) {
     return <FaFileAlt size={22} />;
   };
 
-  // --- ACTION: Delete ---
   const handleDelete = async (id) => {
-      if(!window.confirm("Are you sure you want to delete this message?")) return;
+      if(!window.confirm("Delete this message?")) return;
       try {
           const config = { headers: { Authorization: `Bearer ${user.token}` } };
           await axios.delete(`/api/message/${id}`, config);
-          
-          // Instant UI Update
-          const updatedMessages = messages.map(m => 
-              m._id === id ? { ...m, isDeleted: true, content: "This message was deleted", file: null } : m
-          );
+          const updatedMessages = messages.map(m => m._id === id ? { ...m, isDeleted: true, content: "This message was deleted", file: null } : m);
           setMessages(updatedMessages);
-          toast({ title: "Message Deleted", status: "success", duration: 2000, isClosable: true });
-      } catch (error) {
-          toast({ title: "Failed to delete", status: "error", duration: 2000 });
-      }
-  };
-
-  // --- ACTION: Edit ---
-  const handleEditStart = (m) => {
-      setEditingId(m._id);
-      setEditContent(m.content);
+          toast({ title: "Deleted", status: "success", duration: 1000 });
+      } catch (error) { toast({ title: "Failed", status: "error", duration: 1000 }); }
   };
 
   const handleEditSave = async (id) => {
       try {
           const config = { headers: { Authorization: `Bearer ${user.token}` } };
           await axios.put(`/api/message/edit`, { messageId: id, newContent: editContent }, config);
-          
-          // Instant UI Update
-          const updatedMessages = messages.map(m => 
-            m._id === id ? { ...m, content: editContent, isEdited: true } : m
-          );
+          const updatedMessages = messages.map(m => m._id === id ? { ...m, content: editContent, isEdited: true } : m);
           setMessages(updatedMessages);
           setEditingId(null);
-          toast({ title: "Message Edited", status: "success", duration: 2000 });
-      } catch (error) {
-          toast({ title: "Failed to edit", status: "error", duration: 2000 });
-      }
+      } catch (error) { toast({ title: "Failed", status: "error", duration: 1000 }); }
   };
 
-  // --- ACTION: Reply ---
-  const handleReply = (m) => {
-      if(setReplyMessage) {
-          setReplyMessage(m); // Pass to SingleChat logic
-      }
+  const handleCopy = (content) => {
+      navigator.clipboard.writeText(content);
+      toast({ title: "Copied!", status: "info", duration: 1000, position: "bottom" });
   };
 
-  // --- Preview Helpers ---
-  const openPreview = (src, type) => { setPreviewSrc(src); setPreviewType(type); document.body.style.overflow = "hidden"; };
-  const closePreview = () => { setPreviewSrc(null); setPreviewType(null); document.body.style.overflow = ""; };
+  const openPreview = (src, type) => { setPreviewSrc(src); setPreviewType(type); };
+  const closePreview = () => { setPreviewSrc(null); setPreviewType(null); };
 
-  const getMessageTick = (status) => {
-    if (status === "seen") return <BsCheckAll color="#4FD1C5" size={18} style={{ marginLeft: 3 }} />;
-    if (status === "delivered") return <BsCheckAll color="white" size={18} style={{ marginLeft: 3 }} />;
-    return <BsCheck color="white" size={18} style={{ marginLeft: 3 }} />;
+  const formatTime = (timestamp) => new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const isDifferentDay = (m1, m2) => {
+      if (!m2) return true; 
+      const d1 = new Date(m1.createdAt).toDateString();
+      const d2 = new Date(m2.createdAt).toDateString();
+      return d1 !== d2;
   };
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "";
-    return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const formatDateBadge = (dateString) => {
+      const date = new Date(dateString);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (date.toDateString() === today.toDateString()) return "Today";
+      if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+      return date.toLocaleDateString();
   };
 
   return (
     <>
       <ScrollableFeed className="messages">
-        {messages &&
-          messages.map((m, i) => {
+        {messages && messages.map((m, i) => {
             const senderId = m?.sender?._id || m?.sender;
             const isOwn = senderId?.toString() === user?._id?.toString();
-            const fileType = m.fileType || "";
-            const fileUrl = m.file?.startsWith("http") ? m.file : `${apiUrl}${m.file || ""}`;
-            const fileName = m.fileName || fileUrl.split("/").pop();
+            
+            // 🔥 FILE DETECTION & PATH FIX
+            // Checks if 'm.file' exists. Handles full URLs (Cloudinary) or Relative paths (Localhost)
+            const hasFile = m.file && m.file.length > 0;
+            const fileUrl = hasFile ? (m.file.startsWith("http") ? m.file : `${apiUrl}${m.file}`) : null;
+            
+            let isImage = false;
+            let isVideo = false;
+            let fileName = "File";
+
+            if(hasFile) {
+                // Get filename from URL
+                fileName = m.fileName || fileUrl.split("/").pop();
+                const fileExt = fileName.split('.').pop().toLowerCase();
+                
+                // 🔥 SMART CHECK: Checks file extension OR fileType from DB
+                isImage = (m.fileType && m.fileType.startsWith("image/")) || ['jpg','jpeg','png','gif','webp', 'bmp'].includes(fileExt);
+                isVideo = (m.fileType && m.fileType.startsWith("video/")) || ['mp4','webm','mov', 'mkv', 'avi'].includes(fileExt);
+            }
+
             const isDeleted = m.isDeleted;
+            const showDate = isDifferentDay(m, messages[i - 1]);
 
             return (
-              <Box
-                key={m._id || i}
-                display="flex"
-                justifyContent={isOwn ? "flex-end" : "flex-start"}
-                mb={2}
-                px={2}
-                // ✅ Group Role for Hover
-                role="group" 
-                position="relative"
-              >
-                {/* --- MENU BUTTON (Correctly Positioned Outside Bubble) --- */}
-                {!isDeleted && (
-                  <Box 
-                      display="flex" 
-                      alignItems="center" 
-                      mr={isOwn ? 1 : 0} 
-                      ml={!isOwn ? 1 : 0}
-                      opacity={0}
-                      _groupHover={{ opacity: 1 }}
-                      transition="opacity 0.2s"
-                      order={isOwn ? 1 : 2} // Show on left for received, right for sent
-                  >
-                      <Menu>
-                          <MenuButton as={IconButton} icon={<FaChevronDown />} size="xs" variant="ghost" borderRadius="full" />
-                          <MenuList minW="150px" zIndex={50}>
-                             <MenuItem icon={<FaReply />} onClick={() => handleReply(m)}>Reply</MenuItem>
-                             {isOwn && <MenuItem icon={<FaEdit />} onClick={() => handleEditStart(m)}>Edit</MenuItem>}
-                             {isOwn && <MenuItem icon={<FaTrash />} color="red.500" onClick={() => handleDelete(m._id)}>Delete</MenuItem>}
-                          </MenuList>
-                      </Menu>
-                  </Box>
+              <Box key={m._id || i}>
+                {showDate && (
+                    <Box display="flex" justifyContent="center" my={4}>
+                        <Badge bg={dateBadgeBg} color="gray.500" borderRadius="full" px={3} py={1} fontSize="xs" fontWeight="bold" boxShadow="sm">
+                            {formatDateBadge(m.createdAt)}
+                        </Badge>
+                    </Box>
                 )}
 
-                <Box
-                  order={isOwn ? 2 : 1}
-                  bg={isOwn ? "#2B6CB0" : "white"}
-                  color={isOwn ? "white" : "black"}
-                  borderRadius="xl"
-                  borderTopRightRadius={isOwn ? "2px" : "xl"}
-                  borderTopLeftRadius={!isOwn ? "2px" : "xl"}
-                  p="8px 14px"
-                  maxW="75%"
-                  boxShadow="sm"
-                  position="relative"
-                >
-                  {/* --- REPLY BUBBLE (If this msg is a reply) --- */}
-                  {m.replyTo && (
-                      <Box bg="rgba(0,0,0,0.1)" p={2} mb={2} borderRadius="md" borderLeft="4px solid orange" cursor="pointer">
-                          <Text fontWeight="bold" fontSize="xs" color="orange.300">
-                              {m.replyTo.sender?.name || "User"}
-                          </Text>
-                          <Text fontSize="xs" noOfLines={1} opacity={0.9}>
-                              {m.replyTo.content || (m.replyTo.file ? "Attachment" : "Message deleted")}
-                          </Text>
-                      </Box>
-                  )}
+                <Box display="flex" justifyContent={isOwn ? "flex-end" : "flex-start"} mb={3} px={2} role="group" position="relative" className="msg-animate">
+                    
+                    {!isDeleted && (
+                    <Box display="flex" alignItems="center" mr={isOwn ? 1 : 0} ml={!isOwn ? 1 : 0} opacity={0} _groupHover={{ opacity: 1 }} transition="opacity 0.2s" order={isOwn ? 1 : 2}>
+                        <Menu>
+                            <MenuButton as={IconButton} icon={<FaChevronDown />} size="xs" variant="ghost" borderRadius="full" />
+                            <MenuList minW="150px" zIndex={50}>
+                                <MenuItem icon={<FaReply />} onClick={() => setReplyMessage && setReplyMessage(m)}>Reply</MenuItem>
+                                {m.content && <MenuItem icon={<FaCopy />} onClick={() => handleCopy(m.content)}>Copy</MenuItem>}
+                                {isOwn && <MenuItem icon={<FaEdit />} onClick={() => { setEditingId(m._id); setEditContent(m.content); }}>Edit</MenuItem>}
+                                {isOwn && <MenuItem icon={<FaTrash />} color="red.500" onClick={() => handleDelete(m._id)}>Delete</MenuItem>}
+                            </MenuList>
+                        </Menu>
+                    </Box>
+                    )}
 
-                  {/* Sender Name */}
-                  {m?.chat?.isGroupChat && !isOwn && m?.sender?.name && (
-                      <Text fontSize="xs" fontWeight="bold" color="orange.500" mb={1} textTransform="capitalize">
-                        {m.sender.name}
-                      </Text>
-                  )}
+                    <Box order={isOwn ? 2 : 1}
+                    bg={isOwn ? "transparent" : otherMsgBg}
+                    bgGradient={isOwn ? myMsgBg : "none"}
+                    color={isOwn ? myMsgColor : otherMsgColor}
+                    borderRadius="2xl"
+                    borderBottomRightRadius={isOwn ? "2px" : "2xl"}
+                    borderBottomLeftRadius={!isOwn ? "2px" : "2xl"}
+                    p="10px 16px"
+                    maxW="75%"
+                    boxShadow="md"
+                    position="relative"
+                    minW="100px" // Ensure bubble is never invisible
+                    >
+                    {m.replyTo && (
+                        <Box bg="rgba(0,0,0,0.1)" p={2} mb={2} borderRadius="md" borderLeft="3px solid white" cursor="pointer">
+                            <Text fontWeight="bold" fontSize="xs" opacity={0.9}>{m.replyTo.sender?.name || "User"}</Text>
+                            <Text fontSize="xs" noOfLines={1} opacity={0.8}>{m.replyTo.content || "Media"}</Text>
+                        </Box>
+                    )}
 
-                  {/* --- DELETED MSG UI --- */}
-                  {isDeleted ? (
-                      <Text fontStyle="italic" color="gray.400" fontSize="sm">
-                          <FaTrash style={{display:'inline', marginRight:'5px'}}/> This message was deleted
-                      </Text>
-                  ) : (
-                      <>
-                          {/* Media: Image */}
-                          {fileType.startsWith("image/") && <Image src={fileUrl} borderRadius="lg" maxW="250px" mb={2} cursor="pointer" onClick={() => openPreview(fileUrl, "image")} />}
-                          
-                          {/* Media: Video */}
-                          {fileType.startsWith("video/") && (
-                              <Box position="relative" mb={2} onClick={() => openPreview(fileUrl, "video")} cursor="pointer">
-                                  <video src={fileUrl} style={{ maxWidth: "250px" }} muted />
-                                  <Box position="absolute" top="50%" left="50%" transform="translate(-50%,-50%)"><FaPlay color="white"/></Box>
-                              </Box>
-                          )}
+                    {m?.chat?.isGroupChat && !isOwn && m?.sender?.name && (
+                        <Text fontSize="xs" fontWeight="bold" color="pink.400" mb={1} textTransform="capitalize">{m.sender.name}</Text>
+                    )}
+
+                    {isDeleted ? (
+                        <Text fontStyle="italic" opacity={0.7} fontSize="sm"><FaTrash style={{display:'inline', marginRight:'5px'}}/> Deleted</Text>
+                    ) : (
+                        <>
+                            {/* 🔥 RENDER MEDIA IF PRESENT */}
+                            {hasFile && (
+                                <Box mb={m.content ? 2 : 0}>
+                                    {isImage && (
+                                        <Image 
+                                            src={fileUrl} 
+                                            borderRadius="lg" 
+                                            maxW="250px" 
+                                            cursor="pointer" 
+                                            onClick={() => openPreview(fileUrl, "image")} 
+                                            boxShadow="sm" 
+                                            objectFit="cover"
+                                            fallbackSrc="https://via.placeholder.com/150?text=Error" // Fallback if image fails
+                                        />
+                                    )}
+                                    
+                                    {isVideo && (
+                                        <Box position="relative" mb={2} onClick={() => openPreview(fileUrl, "video")} cursor="pointer">
+                                            <video src={fileUrl} style={{ maxWidth: "250px", borderRadius: "10px" }} muted />
+                                            <Box position="absolute" top="50%" left="50%" transform="translate(-50%,-50%)"><FaPlay color="white" size={20}/></Box>
+                                        </Box>
+                                    )}
+                                    
+                                    {/* Fallback for Docs or Unknown File Types */}
+                                    {(!isImage && !isVideo) && (
+                                        <a href={fileUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                                            <HStack bg="rgba(0,0,0,0.1)" p={3} borderRadius="md" spacing={3}>
+                                                <Box color={isOwn ? "white" : "gray.600"}>{getFileIcon(m.fileType)}</Box>
+                                                <Text fontSize="sm" fontWeight="bold" noOfLines={1} color={isOwn ? "white" : "black"}>{fileName}</Text>
+                                            </HStack>
+                                        </a>
+                                    )}
+                                </Box>
+                            )}
                             
-                          {/* 📢 CRITICAL FIX: Document/Other File Rendering (NEW BLOCK) */}
-                          {m.file && !fileType.startsWith("image/") && !fileType.startsWith("video/") && (
-                              <Box 
-                                  display="flex" 
-                                  alignItems="center" 
-                                  p={2} 
-                                  mb={2} 
-                                  bg={isOwn ? "rgba(255,255,255,0.2)" : "gray.100"}
-                                  borderRadius="md" 
-                                  cursor="pointer"
-                                  position="relative" // For absolute link overlay
-                              >
-                                  <Box color={isOwn ? "white" : "gray.600"} mr={3}>
-                                      {getFileIcon(fileType)}
-                                  </Box>
-                                  <Text 
-                                      noOfLines={1} 
-                                      fontSize="sm" 
-                                      color={isOwn ? "white" : "black"}
-                                      fontWeight="semibold"
-                                  >
-                                      {fileName}
-                                  </Text>
-                                  {/* Clickable link to download/open the file in a new tab */}
-                                  <Tooltip label={`Download ${fileName}`} hasArrow>
-                                      <a 
-                                          href={fileUrl} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer" 
-                                          style={{ position: 'absolute', inset: 0 }} 
-                                      />
-                                  </Tooltip>
-                              </Box>
-                          )}
-                          
-                          {/* Content / Edit Mode */}
-                          {editingId === m._id ? (
-                              <HStack>
-                                  <Input value={editContent} onChange={(e) => setEditContent(e.target.value)} size="sm" bg="white" color="black" autoFocus />
-                                  <Button size="xs" colorScheme="green" onClick={() => handleEditSave(m._id)}><FaCheck /></Button>
-                                  <Button size="xs" colorScheme="red" onClick={() => setEditingId(null)}>X</Button>
-                              </HStack>
-                          ) : (
-                              <>
-                                {m.content && <Text fontSize="15px">{m.content}</Text>}
-                                {m.isEdited && <Text fontSize="9px" textAlign="right" opacity={0.7}>(edited)</Text>}
-                              </>
-                          )}
-                      </>
-                  )}
+                            {/* Render Text Content */}
+                            {editingId === m._id ? (
+                                <HStack>
+                                    <Input value={editContent} onChange={(e) => setEditContent(e.target.value)} size="sm" bg="white" color="black" autoFocus />
+                                    <Button size="xs" colorScheme="green" onClick={() => handleEditSave(m._id)}><FaCheck /></Button>
+                                    <Button size="xs" colorScheme="red" onClick={() => setEditingId(null)}>X</Button>
+                                </HStack>
+                            ) : (
+                                <Text fontSize="15px" lineHeight="1.4">{m.content}</Text>
+                            )}
+                        </>
+                    )}
 
-                  {/* Time & Tick */}
-                  <HStack justifyContent="flex-end" spacing={1} mt={1}>
-                    <Text fontSize="9px" opacity={0.8}>{formatTime(m.createdAt)}</Text>
-                    {isOwn && !isDeleted && getMessageTick(m.status)}
-                  </HStack>
+                    <HStack justifyContent="flex-end" spacing={1} mt={1}>
+                        <Text fontSize="9px" color={isOwn ? timeColorMy : timeColorOther}>{formatTime(m.createdAt)} {m.isEdited && "(edited)"}</Text>
+                        {isOwn && !isDeleted && (m.status === "seen" ? <BsCheckAll color="#68D391" size={16}/> : <BsCheckAll color="rgba(255,255,255,0.7)" size={16}/>)}
+                    </HStack>
+                    </Box>
                 </Box>
               </Box>
             );
           })}
       </ScrollableFeed>
-      {/* Preview Modal Logic (Same as before) */}
+
+      {/* PREVIEW MODAL */}
       {previewSrc && (
-        <Box position="fixed" top={0} left={0} w="100vw" h="100vh" bg="black" zIndex={9999} display="flex" justifyContent="center" alignItems="center">
-           <IconButton icon={<FaArrowLeft/>} onClick={closePreview} position="absolute" top={5} left={5} />
-           {previewType === "video" ? <video src={previewSrc} controls autoPlay style={{maxHeight:"90vh"}}/> : <Image src={previewSrc} maxH="90vh"/>}
+        <Box position="fixed" top={0} left={0} w="100vw" h="100vh" bg="rgba(0,0,0,0.9)" zIndex={9999} display="flex" justifyContent="center" alignItems="center" backdropFilter="blur(5px)">
+           <IconButton icon={<FaArrowLeft/>} onClick={closePreview} position="absolute" top={5} left={5} colorScheme="whiteAlpha" isRound />
+           {previewType === "video" ? <video src={previewSrc} controls autoPlay style={{maxHeight:"90vh", maxWidth:"90vw"}}/> : <Image src={previewSrc} maxH="90vh" maxW="90vw"/>}
         </Box>
       )}
     </>

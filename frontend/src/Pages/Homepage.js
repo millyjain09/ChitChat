@@ -1,13 +1,4 @@
-import {
-  Box,
-  Container,
-  Tab,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tabs,
-  Text,
-} from "@chakra-ui/react";
+import { Box, Container, Tab, TabList, TabPanel, TabPanels, Tabs, Text } from "@chakra-ui/react";
 import { useEffect } from "react";
 import { useHistory } from "react-router";
 import Login from "../components/Authentication/Login";
@@ -18,58 +9,55 @@ function Homepage() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userInfo"));
-
     if (user) history.push("/chats");
   }, [history]);
 
   return (
-    <Container maxW="xl" centerContent>
-      <Box
-        d="flex"
-        justifyContent="center"
-        p={3}
-        bg="white"
-        w="100%"
-        m="40px 0 15px 0"
-        borderRadius="xl"
-        boxShadow="lg"
-        borderWidth="0px" // Border hata kar shadow lagaya
-      >
-        <Text 
-            fontSize="4xl" 
-            fontFamily="Work sans" 
-            fontWeight="bold"
-            bgGradient="linear(to-r, blue.400, blue.600)" // Text Gradient
-            bgClip="text"
-            color="transparent"
+    // ✅ ADDED: h="100vh", display="flex", alignItems="center" 
+    // Taaki ye page screen ke beech mein rahe, par Chatpage disturb na ho.
+    <Box w="100%" h="100vh" display="flex" alignItems="center" justifyContent="center">
+      <Container maxW="xl">
+        {/* Title Box */}
+        <Box
+          d="flex"
+          justifyContent="center"
+          p={3}
+          w="100%"
+          m="0 0 15px 0"
+          borderRadius="lg"
+          bg="rgba(255, 255, 255, 0.2)"
+          backdropFilter="blur(10px)"
+          border="1px solid rgba(255, 255, 255, 0.3)"
+          boxShadow="0 4px 30px rgba(0, 0, 0, 0.1)"
         >
-          Chit-Chat
-        </Text>
-      </Box>
-      <Box 
-        bg="white" 
-        w="100%" 
-        p={4} 
-        borderRadius="xl" 
-        boxShadow="2xl" // Deep shadow for premium look
-        borderWidth="0px"
-      >
-        <Tabs isFitted variant="soft-rounded" colorScheme="blue">
-          <TabList mb="1em">
-            <Tab _selected={{ color: "white", bg: "blue.500" }}>Login</Tab>
-            <Tab _selected={{ color: "white", bg: "blue.500" }}>Sign Up</Tab>
-          </TabList>
-          <TabPanels>
-            <TabPanel>
-              <Login />
-            </TabPanel>
-            <TabPanel>
-              <Signup />
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </Box>
-    </Container>
+          <Text fontSize="4xl" fontFamily="Work sans" fontWeight="bold" color="white" textShadow="0px 2px 4px rgba(0,0,0,0.3)">
+            Chit-Chat
+          </Text>
+        </Box>
+
+        {/* Forms Box */}
+        <Box 
+          w="100%" 
+          p={4} 
+          borderRadius="lg" 
+          bg="rgba(255, 255, 255, 0.25)"
+          backdropFilter="blur(15px)"
+          border="1px solid rgba(255, 255, 255, 0.3)"
+          boxShadow="0 8px 32px 0 rgba(31, 38, 135, 0.37)"
+        >
+          <Tabs isFitted variant="soft-rounded">
+            <TabList mb="1em">
+              <Tab _selected={{ color: "white", bg: "rgba(0,0,0,0.3)" }} color="whiteAlpha.800" fontWeight="bold">Login</Tab>
+              <Tab _selected={{ color: "white", bg: "rgba(0,0,0,0.3)" }} color="whiteAlpha.800" fontWeight="bold">Sign Up</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel><Login /></TabPanel>
+              <TabPanel><Signup /></TabPanel>
+            </TabPanels>
+          </Tabs>
+        </Box>
+      </Container>
+    </Box>
   );
 }
 

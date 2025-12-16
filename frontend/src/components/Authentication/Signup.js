@@ -13,99 +13,62 @@ const Signup = () => {
   const toast = useToast();
   const history = useHistory();
 
-  const [name, setName] = useState();
-  const [email, setEmail] = useState();
-  const [confirmpassword, setConfirmpassword] = useState();
-  const [password, setPassword] = useState();
-  const [pic, setPic] = useState();
+  // ✅ Fix: Initialize with empty strings to avoid uncontrolled input warnings
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [confirmpassword, setConfirmpassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [pic, setPic] = useState("");
   const [picLoading, setPicLoading] = useState(false);
 
-
+  // Password Strength Check
   const isPasswordStrong = (pwd) => {
- // Minimum 8 characters
- if (pwd.length < 8) return { valid: false, message: "Password must be at least 8 characters long." };
- // At least one special character (non-alphanumeric)
- if (!/[^A-Za-z0-9]/.test(pwd)||!/[A-Z]/.test(pwd)||!/[a-z]/.test(pwd)||!/[0-9]/.test(pwd)) return { valid: false, message: "Password must include at least one special character (e.g., !, @, #),an UpperCase and an lowecase" };
-
-
-
-return { valid: true, message: "" };
- };
+    if (pwd.length < 8) return { valid: false, message: "Password must be at least 8 characters long." };
+    if (!/[^A-Za-z0-9]/.test(pwd) || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd)) {
+        return { valid: false, message: "Password must include special char, Uppercase, Lowercase & Number" };
+    }
+    return { valid: true, message: "" };
+  };
 
   const submitHandler = async () => {
     setPicLoading(true);
     if (!name || !email || !password || !confirmpassword) {
-      toast({
-        title: "Please Fill all the Feilds",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+      toast({ title: "Please Fill all the Fields", status: "warning", duration: 5000, isClosable: true, position: "bottom" });
       setPicLoading(false);
       return;
     }
 
     const validationResult = isPasswordStrong(password);
- if (!validationResult.valid) {
-toast({
- title: "Password Requirement Failed",
- description: validationResult.message, // Detailed error message
- status: "error", 
-duration: 6000,
-isClosable: true,
- position: "bottom",
- });
-setPicLoading(false);
- return;
- }
-
-    if (password !== confirmpassword) {
-      toast({
-        title: "Passwords Do Not Match",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+    if (!validationResult.valid) {
+      toast({ title: "Password Weak", description: validationResult.message, status: "error", duration: 5000, isClosable: true, position: "bottom" });
+      setPicLoading(false);
       return;
     }
-    console.log(name, email, password, pic);
+
+    if (password !== confirmpassword) {
+      toast({ title: "Passwords Do Not Match", status: "warning", duration: 5000, isClosable: true, position: "bottom" });
+      setPicLoading(false);
+      return;
+    }
+
     try {
-      const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
-      };
-      const { data } = await axios.post(
-        "/api/user",
-        {
-          name,
-          email,
-          password,
-          pic,
-        },
-        config
-      );
-      console.log(data);
-      toast({
-        title: "Registration Successful",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+      const config = { headers: { "Content-type": "application/json" } };
+      const { data } = await axios.post("/api/user", { name, email, password, pic }, config);
+      
+      toast({ title: "Registration Successful", status: "success", duration: 5000, isClosable: true, position: "bottom" });
+      
       localStorage.setItem("userInfo", JSON.stringify(data));
       setPicLoading(false);
       history.push("/chats");
     } catch (error) {
-      toast({
-        title: "Error Occured!",
-        description: error.response.data.message,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
+      // ✅ Fix: Safer error handling
+      toast({ 
+          title: "Error Occured!", 
+          description: error.response?.data?.message || "Something went wrong", 
+          status: "error", 
+          duration: 5000, 
+          isClosable: true, 
+          position: "bottom" 
       });
       setPicLoading(false);
     }
@@ -114,29 +77,21 @@ setPicLoading(false);
   const postDetails = (pics) => {
     setPicLoading(true);
     if (pics === undefined) {
-      toast({
-        title: "Please Select an Image!",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+      toast({ title: "Please Select an Image!", status: "warning", duration: 5000, isClosable: true, position: "bottom" });
+      setPicLoading(false);
       return;
     }
-    console.log(pics);
+
     if (pics.type === "image/jpeg" || pics.type === "image/png") {
       const data = new FormData();
       data.append("file", pics);
-      data.append("upload_preset", "chat-app");
-      data.append("cloud_name", "piyushproj");
-      fetch("https://api.cloudinary.com/v1_1/piyushproj/image/upload", {
-        method: "post",
-        body: data,
-      })
+      data.append("upload_preset", "chat-app"); // ⚠️ Make sure this matches your Cloudinary preset
+      data.append("cloud_name", "piyushproj");  // ⚠️ Make sure this matches your Cloudinary cloud name
+      
+      fetch("https://api.cloudinary.com/v1_1/piyushproj/image/upload", { method: "post", body: data })
         .then((res) => res.json())
         .then((data) => {
           setPic(data.url.toString());
-          console.log(data.url.toString());
           setPicLoading(false);
         })
         .catch((err) => {
@@ -144,71 +99,57 @@ setPicLoading(false);
           setPicLoading(false);
         });
     } else {
-      toast({
-        title: "Please Select an Image!",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom",
-      });
+      toast({ title: "Please Select an Image!", status: "warning", duration: 5000, isClosable: true, position: "bottom" });
       setPicLoading(false);
       return;
     }
   };
 
+  // ✨ Common Glass Input Style
+  const glassInputStyle = {
+    bg: "rgba(255, 255, 255, 0.2)",
+    border: "1px solid rgba(255, 255, 255, 0.3)",
+    color: "white",
+    _placeholder: { color: "whiteAlpha.800" },
+    _hover: { bg: "rgba(255, 255, 255, 0.3)" },
+    _focus: { bg: "rgba(255, 255, 255, 0.4)", borderColor: "white" }
+  };
+
   return (
     <VStack spacing="15px">
       <FormControl id="first-name" isRequired>
-        <FormLabel fontWeight="bold" color="gray.600">Name</FormLabel>
-        <Input
-          placeholder="Enter Your Name"
-          variant="filled"
-          bg="gray.100"
-          focusBorderColor="blue.500"
-          borderRadius="xl"
-          onChange={(e) => setName(e.target.value)}
-          _hover={{ bg: "gray.200" }}
-          py={6}
+        <FormLabel color="white" fontWeight="bold" fontSize="sm">Name</FormLabel>
+        <Input 
+            placeholder="Enter Your Name" 
+            onChange={(e) => setName(e.target.value)} 
+            value={name}
+            {...glassInputStyle} 
         />
       </FormControl>
 
       <FormControl id="email" isRequired>
-        <FormLabel fontWeight="bold" color="gray.600">Email Address</FormLabel>
-        <Input
-          type="email"
-          placeholder="Enter Your Email Address"
-          variant="filled"
-          bg="gray.100"
-          focusBorderColor="blue.500"
-          borderRadius="xl"
-          onChange={(e) => setEmail(e.target.value)}
-          _hover={{ bg: "gray.200" }}
-          py={6}
+        <FormLabel color="white" fontWeight="bold" fontSize="sm">Email Address</FormLabel>
+        <Input 
+            type="email" 
+            placeholder="Enter Your Email Address" 
+            onChange={(e) => setEmail(e.target.value)} 
+            value={email}
+            {...glassInputStyle} 
         />
       </FormControl>
 
       <FormControl id="password" isRequired>
-        <FormLabel fontWeight="bold" color="gray.600">Password</FormLabel>
+        <FormLabel color="white" fontWeight="bold" fontSize="sm">Password</FormLabel>
         <InputGroup size="md">
-          <Input
-            type={show ? "text" : "password"}
-            placeholder="Enter Password"
-            variant="filled"
-            bg="gray.100"
-            focusBorderColor="blue.500"
-            borderRadius="xl"
-            onChange={(e) => setPassword(e.target.value)}
-            _hover={{ bg: "gray.200" }}
-            py={6}
+          <Input 
+            type={show ? "text" : "password"} 
+            placeholder="Enter Password" 
+            onChange={(e) => setPassword(e.target.value)} 
+            value={password}
+            {...glassInputStyle} 
           />
-          <InputRightElement width="4.5rem" h="100%">
-            <Button 
-                h="1.75rem" 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleClick}
-                _hover={{ bg: "transparent", color: "blue.500" }}
-            >
+          <InputRightElement width="4.5rem">
+            <Button h="1.75rem" size="sm" variant="ghost" onClick={handleClick} color="white" _hover={{ bg: "whiteAlpha.300" }}>
               {show ? "Hide" : "Show"}
             </Button>
           </InputRightElement>
@@ -216,27 +157,17 @@ setPicLoading(false);
       </FormControl>
 
       <FormControl id="confirmpassword" isRequired>
-        <FormLabel fontWeight="bold" color="gray.600">Confirm Password</FormLabel>
+        <FormLabel color="white" fontWeight="bold" fontSize="sm">Confirm Password</FormLabel>
         <InputGroup size="md">
-          <Input
-            type={show ? "text" : "password"}
-            placeholder="Confirm password"
-            variant="filled"
-            bg="gray.100"
-            focusBorderColor="blue.500"
-            borderRadius="xl"
-            onChange={(e) => setConfirmpassword(e.target.value)}
-            _hover={{ bg: "gray.200" }}
-            py={6}
+          <Input 
+            type={show ? "text" : "password"} 
+            placeholder="Confirm password" 
+            onChange={(e) => setConfirmpassword(e.target.value)} 
+            value={confirmpassword}
+            {...glassInputStyle} 
           />
-          <InputRightElement width="4.5rem" h="100%">
-            <Button 
-                h="1.75rem" 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleClick}
-                _hover={{ bg: "transparent", color: "blue.500" }}
-            >
+          <InputRightElement width="4.5rem">
+            <Button h="1.75rem" size="sm" variant="ghost" onClick={handleClick} color="white" _hover={{ bg: "whiteAlpha.300" }}>
               {show ? "Hide" : "Show"}
             </Button>
           </InputRightElement>
@@ -244,52 +175,37 @@ setPicLoading(false);
       </FormControl>
 
       <FormControl id="pic">
-        <FormLabel fontWeight="bold" color="gray.600">Upload your Picture</FormLabel>
-        <Input
-          type="file"
-          p={2}
-          accept="image/*"
-          variant="filled"
-          bg="gray.100"
-          borderRadius="xl"
-          sx={{
-            "::file-selector-button": {
-              height: "90%",
-              mr: 4,
-              border: "none",
-              bg: "blue.100",
-              color: "blue.700",
-              fontWeight: "bold",
-              borderRadius: "md",
-              cursor: "pointer",
-              transition: "all .2s"
-            },
-            "::file-selector-button:hover": {
-               bg: "blue.200"
-            }
-          }}
-          onChange={(e) => postDetails(e.target.files[0])}
+        <FormLabel color="white" fontWeight="bold" fontSize="sm">Upload your Picture</FormLabel>
+        <Input 
+            type="file" 
+            p={1.5} 
+            accept="image/*" 
+            {...glassInputStyle} 
+            onChange={(e) => postDetails(e.target.files[0])} 
+            sx={{ 
+                "::file-selector-button": { 
+                    height: "100%", 
+                    mr: 4, 
+                    border: "none", 
+                    bg: "whiteAlpha.400", 
+                    color: "white", 
+                    fontWeight: "bold", 
+                    borderRadius: "sm", 
+                    cursor: "pointer" 
+                } 
+            }}
         />
       </FormControl>
 
-      <Button
-        bgGradient="linear(to-r, blue.400, blue.600)"
-        color="white"
-        width="100%"
-        style={{ marginTop: 15 }}
-        onClick={submitHandler}
-        isLoading={picLoading}
-        borderRadius="xl"
-        boxShadow="md"
-        _hover={{
-            bgGradient: "linear(to-r, blue.500, blue.700)",
-            boxShadow: "lg",
-            transform: "translateY(-1px)",
-        }}
-        _active={{
-            bgGradient: "linear(to-r, blue.600, blue.800)",
-            transform: "translateY(0px)",
-        }}
+      <Button 
+        bgGradient="linear(to-r, #f093fb, #f5576c)" 
+        color="white" 
+        width="100%" 
+        mt={4} 
+        onClick={submitHandler} 
+        isLoading={picLoading} 
+        _hover={{ bgGradient: "linear(to-r, #d073db, #d5374c)", boxShadow: "lg", transform: "scale(1.02)" }}
+        _active={{ transform: "scale(0.98)" }}
       >
         Sign Up
       </Button>

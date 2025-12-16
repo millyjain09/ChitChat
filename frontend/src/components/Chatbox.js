@@ -2,25 +2,30 @@ import { Box } from "@chakra-ui/layout";
 import "./styles.css";
 import SingleChat from "./SingleChat";
 import { ChatState } from "../Context/ChatProvider";
+import { useColorModeValue } from "@chakra-ui/react";
 
 const Chatbox = ({ fetchAgain, setFetchAgain }) => {
   const { selectedChat } = ChatState();
 
+  // Glass Theme Colors
+  const glassBg = useColorModeValue("rgba(255, 255, 255, 0.6)", "rgba(0, 0, 0, 0.6)");
+  const borderColor = useColorModeValue("rgba(255, 255, 255, 0.3)", "rgba(255, 255, 255, 0.1)");
+
   return (
     <Box
-      d={{ base: selectedChat ? "flex" : "none", md: "flex" }}
+      display={{ base: selectedChat ? "flex" : "none", md: "flex" }}
       alignItems="center"
       flexDir="column"
-      p={0}
-      bg="white"
-      ml={{ md: 20 }}
-      w={{ base: "100%", md: "98%" }}
+      p={3}
+      // Glass Effect
+      bg={glassBg}
+      backdropFilter="blur(20px)"
+      border="1px solid"
+      borderColor={borderColor}
+      w="100%"
+      h="100%"
       borderRadius="xl"
-      borderWidth="1px"
-      borderColor="gray.100"
-      boxShadow="base"
-       
-      overflow="hidden"
+      boxShadow="lg"
     >
       <SingleChat fetchAgain={fetchAgain} setFetchAgain={setFetchAgain} />
     </Box>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Stack, Text, Avatar, HStack, VStack, Icon, Spinner, useToast, useColorModeValue } from "@chakra-ui/react";
+import { Box, Stack, Text, Avatar, HStack, VStack, Icon, Spinner, useColorModeValue } from "@chakra-ui/react";
 import { FaPhone, FaVideo, FaArrowDown, FaArrowUp, FaClock } from "react-icons/fa";
 import axios from "axios";
 import { ChatState } from "../Context/ChatProvider";
@@ -9,13 +9,12 @@ const CallHistory = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = ChatState();
-  const toast = useToast();
 
-  // Theme Colors
-  const bg = useColorModeValue("white", "gray.800");
-  const hoverBg = useColorModeValue("gray.50", "gray.700");
-  const textColor = useColorModeValue("black", "white");
+  // Glassy & Theme Colors
+  const textColor = useColorModeValue("gray.800", "white");
   const subTextColor = useColorModeValue("gray.500", "gray.400");
+  const itemBg = useColorModeValue("white", "rgba(255,255,255,0.05)");
+  const hoverBg = useColorModeValue("gray.50", "rgba(255,255,255,0.1)");
 
   const fetchCallLogs = useCallback(async () => {
     if (!user) return;
@@ -34,47 +33,40 @@ const CallHistory = () => {
     fetchCallLogs();
   }, [fetchCallLogs]);
 
-  // Helper: Date Format
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
-    const today = new Date();
-    const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth();
-    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (isToday) return `Today, ${time}`;
-    return `${date.toLocaleDateString()}, ${time}`;
+    return date.toLocaleDateString() + ", " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // ✅ Helper: Pretty Duration (e.g. "0:05" -> "5 sec")
   const prettyDuration = (durationStr) => {
       if(!durationStr) return null;
       const parts = durationStr.split(":");
       if(parts.length === 2) {
           const mins = parseInt(parts[0]);
           const secs = parseInt(parts[1]);
-          if(mins > 0) return `${mins} min ${secs} sec`;
-          return `${secs} sec`;
+          if(mins > 0) return `${mins}m ${secs}s`;
+          return `${secs}s`;
       }
       return durationStr;
   };
 
   return (
-    <Box w="100%" h="100%" bg={bg} borderRadius="xl" overflowY="hidden" p={2}>
+    <Box w="100%" h="100%" overflowY="hidden" p={2}>
       {loading ? (
-        <Spinner size="xl" alignSelf="center" margin="auto" display="block" mt={10} color="blue.500" />
+        <Spinner size="xl" alignSelf="center" margin="auto" display="block" mt={10} color="pink.500" />
       ) : (
-        <Stack overflowY="scroll" className="hide-scrollbar" spacing={2}>
-          {logs.length === 0 && <Text textAlign="center" mt={10} color="gray.500" fontSize="sm">No call history yet</Text>}
+        <Stack overflowY="scroll" className="hide-scrollbar" spacing={3} pb={4}>
+          {logs.length === 0 && (
+             <VStack mt={20} opacity={0.6}>
+                 <FaClock size={40} />
+                 <Text>No call history yet</Text>
+             </VStack>
+          )}
           
           {logs.map((log) => {
             const isOutgoing = log.sender._id === user._id;
-            
-            // Smart Status Check
-            let isMissed = log.callStatus === "Missed";
-            if (!log.callStatus && log.content) isMissed = log.content.includes("Missed");
-
-            // Smart Icon Check
-            let callIcon = FaPhone;
-            if (log.callType === "Video" || (log.content && log.content.includes("Video"))) callIcon = FaVideo;
+            let isMissed = log.callStatus === "Missed" || (log.content && log.content.includes("Missed"));
+            let callIcon = (log.callType === "Video" || (log.content && log.content.includes("Video"))) ? FaVideo : FaPhone;
             
             const otherUser = !log.chat.isGroupChat ? getSenderFull(user, log.chat.users) : { name: log.chat.chatName, pic: "https://cdn-icons-png.flaticon.com/512/166/166258.png" };
             const formattedDuration = prettyDuration(log.callDuration);
@@ -82,47 +74,36 @@ const CallHistory = () => {
             return (
               <Box 
                 key={log._id} 
-                p={3} 
-                bg={hoverBg} // Thoda distinct background
+                p={4} 
+                bg={itemBg} 
                 borderRadius="xl" 
+                boxShadow="sm"
                 cursor="pointer" 
                 transition="all 0.2s"
-                _hover={{ transform: "translateY(-1px)", shadow: "sm" }}
+                _hover={{ transform: "translateY(-2px)", bg: hoverBg, boxShadow: "md" }}
+                borderLeft={isMissed ? "4px solid #F56565" : (isOutgoing ? "4px solid #48BB78" : "4px solid #4299E1")}
               >
                 <HStack justifyContent="space-between">
-                  <HStack spacing={3}>
-                    <Avatar size="md" name={otherUser.name} src={otherUser.pic} border="2px solid white" shadow="sm" />
+                  <HStack spacing={4}>
+                    <Avatar size="md" name={otherUser.name} src={otherUser.pic} border="2px solid white" />
                     <VStack align="start" spacing={0}>
                       <Text fontWeight="bold" fontSize="16px" color={textColor} textTransform="capitalize">
                         {otherUser.name}
                       </Text>
-                      <HStack spacing={1} alignItems="center">
-                        <Icon 
-                            as={isOutgoing ? FaArrowUp : FaArrowDown} 
-                            color={isMissed ? "red.500" : (isOutgoing ? "green.500" : "blue.500")} 
-                            boxSize={3} 
-                        />
-                        <Text fontSize="12px" color={subTextColor} fontWeight="500">
+                      <HStack spacing={1} alignItems="center" fontSize="12px" color={subTextColor}>
+                        <Icon as={isOutgoing ? FaArrowUp : FaArrowDown} color={isMissed ? "red.400" : (isOutgoing ? "green.400" : "blue.400")} />
+                        <Text fontWeight="500">
                            {formatDateTime(log.createdAt)}
                         </Text>
                       </HStack>
                     </VStack>
                   </HStack>
                   
-                  {/* ✅ DURATION OR STATUS DISPLAY */}
                   <VStack align="end" spacing={0}>
-                      <Icon as={callIcon} color={isMissed ? "red.400" : "green.500"} boxSize={5} mb={1} />
-                      
-                      {/* Agar Duration hai to Duration dikhao, nahi to Status */}
-                      {formattedDuration ? (
-                          <HStack spacing={1} opacity={0.8}>
-                              <Text fontSize="11px" fontWeight="bold" color={textColor}>{formattedDuration}</Text>
-                          </HStack>
-                      ) : (
-                          <Text fontSize="11px" color="gray.500" fontWeight="bold">
-                              {isMissed ? "Missed" : "Ended"}
-                          </Text>
-                      )}
+                      <Icon as={callIcon} color="gray.400" boxSize={4} mb={1} />
+                      <Text fontSize="11px" fontWeight="bold" color={isMissed ? "red.400" : "gray.600"}>
+                          {isMissed ? "Missed" : formattedDuration || "Ended"}
+                      </Text>
                   </VStack>
                 </HStack>
               </Box>
