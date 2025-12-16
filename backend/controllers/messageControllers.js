@@ -23,11 +23,11 @@ const sendMessage = asyncHandler(async (req, res) => {
     replyTo: replyTo || null
   };
 
-  if (req.file) {
-    newMessage.file = `/uploads/${req.file.filename}`;
-    newMessage.fileType = req.file.mimetype;
-    newMessage.fileName = req.file.originalname;
-  }
+ if (req.file) {
+  newMessage.file = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  newMessage.fileType = req.file.mimetype;
+  newMessage.fileName = req.file.originalname;
+}
 
   try {
     let message = await Message.create(newMessage);

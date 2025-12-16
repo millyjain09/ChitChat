@@ -93,7 +93,14 @@ function ScrollableChat({ messages, setMessages, socket, setReplyMessage }) {
             // 🔥 FILE DETECTION & PATH FIX
             // Checks if 'm.file' exists. Handles full URLs (Cloudinary) or Relative paths (Localhost)
             const hasFile = m.file && m.file.length > 0;
-            const fileUrl = hasFile ? (m.file.startsWith("http") ? m.file : `${apiUrl}${m.file}`) : null;
+            const fileUrl =
+  m.file?.startsWith("http")
+    ? m.file
+    : `http://localhost:5000${m.file}`;
+
+            if (fileUrl && fileUrl.startsWith('/uploads')) {
+                fileUrl = `${apiUrl}${fileUrl}`;
+            }
             
             let isImage = false;
             let isVideo = false;
@@ -170,16 +177,16 @@ function ScrollableChat({ messages, setMessages, socket, setReplyMessage }) {
                             {hasFile && (
                                 <Box mb={m.content ? 2 : 0}>
                                     {isImage && (
-                                        <Image 
-                                            src={fileUrl} 
-                                            borderRadius="lg" 
-                                            maxW="250px" 
-                                            cursor="pointer" 
-                                            onClick={() => openPreview(fileUrl, "image")} 
-                                            boxShadow="sm" 
-                                            objectFit="cover"
-                                            fallbackSrc="https://via.placeholder.com/150?text=Error" // Fallback if image fails
-                                        />
+                                      <Image
+  src={fileUrl}
+  borderRadius="lg"
+  maxW="250px"
+  cursor="pointer"
+  onClick={() => openPreview(fileUrl, "image")}
+  boxShadow="sm"
+  objectFit="cover"
+/>
+
                                     )}
                                     
                                     {isVideo && (

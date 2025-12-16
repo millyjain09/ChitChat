@@ -53,8 +53,8 @@ const path = require("path");
 // Storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Make sure 'uploads/' folder exists in your project root
-    cb(null, "uploads/");
+    
+    cb(null, path.join(__dirname, '..','..','uploads'));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);

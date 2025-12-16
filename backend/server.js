@@ -23,18 +23,18 @@ connectDB();
 
 const app = express();
 
-// -------- CORS CONFIG FOR PRODUCTION ----------
+
 app.use(cors({
-  origin: process.env.CLIENT_URL, // ONLY YOUR VERCEL FRONTEND
+  origin: process.env.CLIENT_URL, 
   credentials: true,
 }));
 
 app.use(express.json());
 
-// Static uploads (Not recommended for Render)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "public")));
 
-// API Routes
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);

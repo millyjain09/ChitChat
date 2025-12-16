@@ -16,7 +16,6 @@ import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 import Picker from "emoji-picker-react";
 
-// Sounds
 const notificationSound = new Audio("https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3"); 
 const sendSound = new Audio("https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3"); 
 
@@ -94,7 +93,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
 
             if (selectedFile) {
-                // 🔥 FormData Logic for File Upload
+                
                 const formData = new FormData();
                 formData.append("chatId", selectedChat._id);
                 
@@ -115,11 +114,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             const data = res.data;
             if (!data.chat || !data.chat.users) data.chat = selectedChat;
             
-            // ✅ Optimistic UI Update (Turant dikhana)
-            setMessages([...messages, data]); 
+            // setMessages([...messages, data]); 
             
             if (socket) socket.emit("new message", data);
-            
             setNewMessage("");
             setSelectedFile(null);
             setShowEmojiPicker(false);
@@ -174,7 +171,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             setFetchAgain(!fetchAgain);
         }
       } else {
-        // 🔥 Double Message Fix: Khud ka message socket se mat lo
+        
         if (newMessageRecieved.sender._id === user._id) return; 
         setMessages((prev) => [...prev, newMessageRecieved]);
       }
