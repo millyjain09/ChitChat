@@ -1,87 +1,187 @@
-💬 ChitChat - Real-Time Messaging App
-ChitChat is a full-stack real-time video and text chat application built using the MERN stack. It features instant messaging, user authentication, and a responsive UI designed for seamless communication.
+# 💬 ChitChat – A Real-Time Messaging & Video Calling Platform
 
-🚀 Features
-🔐 Secure Authentication: Robust User Login and Logout functionality powered by JWT and bcrypt.
+<p align="center">
 
-⚡ Real-Time Messaging: Instant text communication with "typing..." indicators.
+  **Connect. Chat. Call. Stay Connected.**
 
-📞 Voice & Video Calls: Peer-to-peer high-quality audio and video calling integrated via WebRTC.
+</p>
 
-😊 Emoji Support: Integrated emoji picker for expressive messaging.
+ChitChat is a full-stack real-time communication platform built using the **MERN Stack**, enabling users to connect through instant messaging, group conversations, and audio and video calls.
 
-📁 Media Sharing: Send and receive images or files seamlessly.
+It combines real-time communication, secure authentication, media sharing, and an interactive user interface to deliver a seamless messaging experience across devices.
 
-🔔 Push Notifications: Real-time alerts so you never miss a message or a call.
+---
 
-📱 Fully Responsive: Optimized UI for all devices (Mobile, Tablet, and Desktop).
+## ✨ Key Features
 
-🛠️ Tech Stack
-Frontend:
+- **🔐 Secure Authentication:** User registration, login, and logout with JWT and bcrypt-based password security.
+- **⚡ Real-Time Messaging:** Instant text communication powered by Socket.io.
+- **⌨️ Typing Indicators:** See when another user is typing in real time.
+- **📞 Audio & Video Calls:** Peer-to-peer communication using WebRTC.
+- **👥 Group Chats:** Create groups and communicate with multiple users.
+- **😊 Emoji Support:** Express yourself using an integrated emoji picker.
+- **📁 Media Sharing:** Send and receive images or files seamlessly.
+- **🔔 Real-Time Notifications:** Get notified about incoming messages and calls.
+- **📱 Responsive Design:** Optimized for desktop, tablet, and mobile devices.
+- **🎨 Smooth UI Animations:** Enhanced user experience using Framer Motion.
 
-React.js
+---
 
-Tailwind CSS (Styling)
+## 📸 Project Screenshots
 
-Framer Motion (Animations)
+### 💬 Main Chat Interface
 
-Lucide React (Icons)
+<p align="center">
+  <img src="screenshots/Interface.png" width="100%" alt="ChitChat Main Interface"/>
+</p>
 
-Backend:
+### 👥 Group Chat
 
-Node.js & Express.js
+<p align="center">
+  <img src="screenshots/groupChat.png" width="100%" alt="ChitChat Group Chat"/>
+</p>
 
-Socket.io (Real-time engine)
+### 👤 User Profile
 
-WebRTC (Real Time call)
+<p align="center">
+  <img src="screenshots/profile.png" width="100%" alt="ChitChat User Profile"/>
+</p>
 
-MongoDB (Database)
+---
 
-Cloudinary (Image/Avatar storage)
+## 🛠️ Tech Stack
 
-📋 Prerequisites
-Before you begin, ensure you have the following installed:
+| Category | Technologies |
+|---|---|
+| Frontend | React.js, Tailwind CSS |
+| Animations | Framer Motion |
+| Icons | Lucide React |
+| Backend | Node.js, Express.js |
+| Database | MongoDB |
+| Real-Time Messaging | Socket.io |
+| Audio & Video Calls | WebRTC |
+| Authentication | JWT, bcrypt |
+| Media Storage | Cloudinary |
 
-Node.js (v16+)
+---
 
-npm or yarn
+## 📋 Prerequisites
 
-A MongoDB Atlas account (or local MongoDB)
+Before running the project, make sure you have:
 
-⚙️ Installation & Setup
-Clone the repository:
+- Node.js (v16 or above)
+- npm or yarn
+- MongoDB Atlas account or local MongoDB installation
+- Cloudinary account
 
-Bash
-git clone https://github.com/your-username/chitchat.git
+---
+
+## ⚙️ Installation & Setup
+
+Follow these steps to run ChitChat locally.
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/millyjain09/chitchat.git
 cd chitchat
-Install dependencies:
-For Backend:
+```
 
-Bash
+### 2. Install Dependencies
+
+Open a terminal in the project directory.
+
+**Backend:**
+
+```bash
 cd backend
 npm install
-For Frontend:
+```
 
-Bash
+**Frontend:**
+
+Open another terminal from the project root directory:
+
+```bash
 cd frontend
 npm install
-Environment Variables:
-Create a .env file in the backend directory and add:
+```
 
-Code snippet
+### 3. Configure Environment Variables
+
+Create a `.env` file inside the `backend` directory and add the following:
+
+```env
 PORT=5000
+
 MONGODB_URI=your_mongodb_connection_string
+
 JWT_SECRET=your_secret_key
-CLOUDINARY_CLOUD_NAME=your_name
-CLOUDINARY_API_KEY=your_key
-CLOUDINARY_API_SECRET=your_secret
-Run the Application:
-Start Backend:
 
-Bash
-npm run dev
-Start Frontend:
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
 
-Bash
-cd ../frontend
+Replace the placeholder values with your actual configuration.
+
+**Note:** Never commit your `.env` file or expose sensitive credentials on GitHub.
+
+### 4. Run the Application
+
+Start the backend server:
+
+```bash
+cd backend
 npm run dev
+```
+
+Start the frontend in a separate terminal:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open the local URL displayed by the frontend development server to access ChitChat.
+
+---
+
+## 🎯 Project Objectives
+
+- Build a seamless real-time messaging experience.
+- Enable secure and reliable user authentication.
+- Integrate peer-to-peer audio and video communication.
+- Support interactive group conversations and media sharing.
+- Deliver a responsive and engaging communication interface.
+
+---
+
+## 🔮 Future Enhancements
+
+- Message editing and deletion.
+- Read receipts and message delivery status.
+- Message reactions and reply functionality.
+- Enhanced group management.
+- Improved call history and notification management.
+
+---
+
+## 👩‍💻 Author
+
+**Milly Jain**
+
+B.Tech Computer Science & Engineering
+
+- GitHub: [millyjain09](https://github.com/millyjain09)
+- LinkedIn: [Milly Jain](https://linkedin.com/in/milly-jain/)
+
+---
+
+<p align="center">
+
+  **Built with ❤️ to make communication seamless.**
+
+  *Chat. Connect. Communicate.*
+
+</p>
